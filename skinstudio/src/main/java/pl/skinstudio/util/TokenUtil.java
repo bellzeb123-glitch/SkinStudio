@@ -27,8 +27,6 @@ public class TokenUtil {
     private static final String TOKEN_TYPE_CHANGE = "change";
     private static final String TOKEN_TYPE_SKIN   = "skin";
 
-    // ── Tworzenie tokenów ────────────────────────────────────
-
     public static ItemStack createChangeToken() {
         SkinStudio plugin = SkinStudio.getInstance();
         ItemStack item = new ItemStack(plugin.getSkinConfig().getChangeTokenMaterial());
@@ -62,8 +60,6 @@ public class TokenUtil {
         return item;
     }
 
-    // ── Odczyt tokenów ───────────────────────────────────────
-
     public static boolean isChangeToken(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return false;
         return TOKEN_TYPE_CHANGE.equals(item.getItemMeta().getPersistentDataContainer()
@@ -82,8 +78,6 @@ public class TokenUtil {
             .get(new NamespacedKey(SkinStudio.getInstance(), KEY_SKIN_ID), PersistentDataType.STRING);
     }
 
-    // ── Operacje na przedmiotach ─────────────────────────────
-
     public static boolean hasCustomSkin(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return false;
         return item.getItemMeta().getPersistentDataContainer()
@@ -96,11 +90,11 @@ public class TokenUtil {
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
         SkinStudio plugin = SkinStudio.getInstance();
 
-        NamespacedKey originalModelKey   = new NamespacedKey(plugin, KEY_ORIGINAL_MODEL);
-        NamespacedKey originalEquipKey   = new NamespacedKey(plugin, KEY_ORIGINAL_EQUIP);
-        NamespacedKey hadEquippableKey   = new NamespacedKey(plugin, KEY_HAD_EQUIPPABLE);
+        NamespacedKey originalModelKey = new NamespacedKey(plugin, KEY_ORIGINAL_MODEL);
+        NamespacedKey originalEquipKey = new NamespacedKey(plugin, KEY_ORIGINAL_EQUIP);
+        NamespacedKey hadEquippableKey = new NamespacedKey(plugin, KEY_HAD_EQUIPPABLE);
 
-        // Zapisz oryginał item_model (tylko raz)
+        // Zapisz oryginał item_model
         if (!pdc.has(originalModelKey, PersistentDataType.STRING)) {
             NamespacedKey currentModel = meta.getItemModel();
             pdc.set(originalModelKey, PersistentDataType.STRING,
@@ -110,17 +104,14 @@ public class TokenUtil {
         // Ustaw nowy item_model
         meta.setItemModel(parseKey(skin.getItemModel()));
 
-        // Obsługa equippable (tekstura zbroi na ciele) — tylko gdy skin ma equipment-asset
+        // Obsługa equippable tylko dla zbroi z equipment-asset
         if (skin.hasEquipmentAsset()) {
             EquipmentSlot eqSlot = getEquipmentSlot(item.getType());
             if (eqSlot != null) {
-                // Zapisz czy przedmiot oryginalnie miał equippable
                 if (!pdc.has(hadEquippableKey, PersistentDataType.BYTE)) {
                     pdc.set(hadEquippableKey, PersistentDataType.BYTE,
                         meta.hasEquippable() ? (byte) 1 : (byte) 0);
                 }
-
-                // Zapisz oryginalny model equippable (tylko raz)
                 if (!pdc.has(originalEquipKey, PersistentDataType.STRING)) {
                     String currentEquipModel = "";
                     if (meta.hasEquippable()) {
@@ -130,15 +121,9 @@ public class TokenUtil {
                     pdc.set(originalEquipKey, PersistentDataType.STRING, currentEquipModel);
                 }
 
-                // Pobierz lub utwórz equippable z właściwym slotem
-                EquippableComponent eq;
-                if (meta.hasEquippable()) {
-                    eq = meta.getEquippable();
-                } else {
-                    // Utwórz nowy equippable z właściwym slotem — to kluczowe!
-                    eq = meta.getEquippable();
-                    eq.setSlot(eqSlot);
-                }
+                EquippableComponent eq = meta.getEquippable();
+                // KLUCZOWE: zawsze ustaw slot — bez tego hełm/inne zbroje nie będą zakładalne
+                eq.setSlot(eqSlot);
                 eq.setModel(parseKey(skin.getEquipmentAsset()));
                 meta.setEquippable(eq);
             }
@@ -159,38 +144,28 @@ public class TokenUtil {
         NamespacedKey originalEquipKey = new NamespacedKey(plugin, KEY_ORIGINAL_EQUIP);
         NamespacedKey hadEquippableKey = new NamespacedKey(plugin, KEY_HAD_EQUIPPABLE);
 
-        String originalModel    = pdc.get(originalModelKey, PersistentDataType.STRING);
-        String originalEquip    = pdc.getOrDefault(originalEquipKey, PersistentDataType.STRING, "");
-        byte   hadEquippable    = pdc.getOrDefault(hadEquippableKey, PersistentDataType.BYTE, (byte) 0);
+        String originalModel = pdc.get(originalModelKey, PersistentDataType.STRING);
+        String originalEquip = pdc.getOrDefault(originalEquipKey, PersistentDataType.STRING, "");
+        byte   hadEquippable = pdc.getOrDefault(hadEquippableKey, PersistentDataType.BYTE, (byte) 0);
 
         pdc.remove(originalModelKey);
         pdc.remove(originalEquipKey);
         pdc.remove(hadEquippableKey);
 
-        // Przywróć item_model
         meta.setItemModel(originalModel != null && !originalModel.isEmpty()
             ? parseKey(originalModel) : null);
 
-        // Przywróć equippable
-        if (hadEquippable == 1) {
-            // Przedmiot miał equippable — przywróć oryginalny model
-            if (meta.hasEquippable()) {
-                EquippableComponent eq = meta.getEquippable();
-                eq.setModel(originalEquip.isEmpty() ? null : parseKey(originalEquip));
-                meta.setEquippable(eq);
-            }
-        } else {
-            // Przedmiot nie miał equippable — usuń go całkowicie
-            if (meta.hasEquippable()) {
-                meta.setEquippable(null);
-            }
+        if (hadEquippable == 1 && meta.hasEquippable()) {
+            EquippableComponent eq = meta.getEquippable();
+            eq.setModel(originalEquip.isEmpty() ? null : parseKey(originalEquip));
+            meta.setEquippable(eq);
+        } else if (hadEquippable == 0 && meta.hasEquippable()) {
+            meta.setEquippable(null);
         }
 
         result.setItemMeta(meta);
         return result;
     }
-
-    // ── Pomocnicze ───────────────────────────────────────────
 
     private static NamespacedKey parseKey(String key) {
         if (key == null || key.isEmpty()) return null;
