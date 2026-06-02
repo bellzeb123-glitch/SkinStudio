@@ -1,400 +1,216 @@
-package pl.skinstudio.gui;
+package pl.skinstudio.util;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.Sound;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.ClickType;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.event.inventory.InventoryDragEvent;
-import org.bukkit.event.inventory.InventoryMoveItemEvent;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.components.EquippableComponent;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import pl.skinstudio.SkinStudio;
 import pl.skinstudio.model.SkinDefinition;
-import pl.skinstudio.util.TokenUtil;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
-public class AdminGUI implements Listener {
+public class TokenUtil {
 
-    // InventoryHolder pozwala jednoznacznie identyfikować nasze GUI
-    // i blokować wszelkie akcje na nim
-    private static class SkinAdminHolder implements InventoryHolder {
-        private final Tab tab;
-        private Inventory inv;
-        SkinAdminHolder(Tab tab) { this.tab = tab; }
-        @Override public Inventory getInventory() { return inv; }
-        void setInventory(Inventory inv) { this.inv = inv; }
-        Tab getTab() { return tab; }
-    }
+    private static final String KEY_TOKEN_TYPE     = "skinstudio_token_type";
+    private static final String KEY_SKIN_ID        = "skinstudio_skin_id";
+    private static final String KEY_ORIGINAL_MODEL = "skinstudio_original_model";
+    private static final String KEY_ORIGINAL_EQUIP = "skinstudio_original_equip";
+    private static final String KEY_HAD_EQUIPPABLE = "skinstudio_had_equippable";
 
-    private static final String NBT_SKIN_ID   = "ss_skin_id";
-    private static final String NBT_IS_CHANGE = "ss_is_change";
-    private static final String NBT_TAB_NAME  = "ss_tab_name";
+    private static final String TOKEN_TYPE_CHANGE = "change";
+    private static final String TOKEN_TYPE_SKIN   = "skin";
 
-    private enum Tab {
-        BRONZE    ("&6Bronze",      Material.ORANGE_STAINED_GLASS_PANE, "bronze"),
-        LIVING    ("&aŻyjący",      Material.LIME_STAINED_GLASS_PANE,   "living"),
-        CORRUPTED ("&5Skażony",     Material.PURPLE_STAINED_GLASS_PANE, "corrupted"),
-        PALLADIUM ("&bPalladium",   Material.CYAN_STAINED_GLASS_PANE,   "palladium"),
-        ULTIMATIUM("&eUltimatium",  Material.YELLOW_STAINED_GLASS_PANE, "ultimatium"),
-        UNIQUE    ("&cUnikalne",    Material.RED_STAINED_GLASS_PANE,    null),
-        TOKENS    ("&fTokeny",      Material.NETHER_STAR,               null);
+    // ── Tworzenie tokenów ────────────────────────────────────
 
-        final String label;
-        final Material mat;
-        final String prefix;
-        Tab(String l, Material m, String p) { label=l; mat=m; prefix=p; }
-    }
-
-    private static final int GUI_SIZE = 54;
-    private static final int[] TAB_SLOTS = {0,1,2,3,4,5,6,8};
-
-    private final SkinStudio plugin;
-    private final Map<UUID, Tab>    currentTab     = new HashMap<>();
-    private final Map<UUID, String> awaitingAmount = new HashMap<>();
-
-    public AdminGUI(SkinStudio plugin) {
-        this.plugin = plugin;
-        Bukkit.getPluginManager().registerEvents(this, plugin);
-    }
-
-    // ── Otwieranie GUI ───────────────────────────────────────
-
-    public void openFor(Player player) {
-        Tab tab = currentTab.getOrDefault(player.getUniqueId(), Tab.BRONZE);
-        openTab(player, tab);
-    }
-
-    private void openTab(Player player, Tab tab) {
-        currentTab.put(player.getUniqueId(), tab);
-
-        SkinAdminHolder holder = new SkinAdminHolder(tab);
-        Inventory inv = Bukkit.createInventory(holder, GUI_SIZE,
-            colorize("&8✦ &6Admin: Skin Studio &8✦"));
-        holder.setInventory(inv);
-
-        buildGui(inv, tab);
-        player.openInventory(inv);
-    }
-
-    private void buildGui(Inventory inv, Tab activeTab) {
-        // Tło
-        for (int i = 0; i < GUI_SIZE; i++)
-            inv.setItem(i, glass(Material.GRAY_STAINED_GLASS_PANE));
-
-        inv.setItem(7, glass(Material.BLACK_STAINED_GLASS_PANE));
-
-        // Zakładki
-        Tab[] tabs = Tab.values();
-        for (int i = 0; i < TAB_SLOTS.length && i < tabs.length; i++) {
-            Tab t = tabs[i];
-            boolean active = t == activeTab;
-            inv.setItem(TAB_SLOTS[i], tabItem(t, active));
-        }
-
-        // Zawartość
-        switch (activeTab) {
-            case TOKENS   -> buildTokensTab(inv);
-            case UNIQUE   -> buildUniqueTab(inv);
-            default       -> buildTierTab(inv, activeTab);
-        }
-    }
-
-    private void buildTierTab(Inventory inv, Tab tab) {
-        int slot = 9;
-        for (SkinDefinition skin : getSortedSkins(tab)) {
-            if (slot >= GUI_SIZE) break;
-            inv.setItem(slot++, skinItem(skin));
-        }
-    }
-
-    private void buildUniqueTab(Inventory inv) {
-        String[] ids = {"frost_palace_fire_sword","frost_palace_ice_sword",
-                        "primis_gladius_sword","magmaguys_toothpick"};
-        int slot = 9;
-        for (String id : ids) {
-            SkinDefinition s = plugin.getSkinConfig().getSkin(id);
-            if (s != null && slot < GUI_SIZE) inv.setItem(slot++, skinItem(s));
-        }
-    }
-
-    private void buildTokensTab(Inventory inv) {
-        inv.setItem(9, changeTokenItem());
-        inv.setItem(11, infoItem());
-    }
-
-    // ── Tworzenie itemów ─────────────────────────────────────
-
-    private ItemStack skinItem(SkinDefinition skin) {
-        Material mat = skin.getAllowedTypes().isEmpty()
-            ? Material.PAPER : skin.getAllowedTypes().get(0);
-        ItemStack item = new ItemStack(mat);
-        ItemMeta meta = item.getItemMeta();
-        meta.displayName(colorize(skin.getDisplayName()));
-
-        NamespacedKey mk = parseKey(skin.getItemModel());
-        if (mk != null) meta.setItemModel(mk);
-
-        List<Component> lore = new ArrayList<>();
-        lore.add(colorize("&7ID: &f" + skin.getId()));
-        if (skin.hasEquipmentAsset())
-            lore.add(colorize("&7Tekstura: &f" + skin.getEquipmentAsset()));
-        lore.add(Component.empty());
-        lore.add(colorize("&aLewy klik &7→ daj 1 Token Skina"));
-        lore.add(colorize("&ePrawy klik &7→ wybierz ilość"));
-        meta.lore(lore);
-
-        // NBT — identyfikator skina
-        meta.getPersistentDataContainer().set(
-            new NamespacedKey(plugin, NBT_SKIN_ID),
-            PersistentDataType.STRING, skin.getId());
-
-        item.setItemMeta(meta);
-        return item;
-    }
-
-    private ItemStack changeTokenItem() {
+    public static ItemStack createChangeToken() {
+        SkinStudio plugin = SkinStudio.getInstance();
         ItemStack item = new ItemStack(plugin.getSkinConfig().getChangeTokenMaterial());
         ItemMeta meta = item.getItemMeta();
         meta.displayName(colorize(plugin.getSkinConfig().getChangeTokenName()));
         List<Component> lore = new ArrayList<>();
-        for (String l : plugin.getSkinConfig().getChangeTokenLore()) lore.add(colorize(l));
-        lore.add(Component.empty());
-        lore.add(colorize("&aLewy klik &7→ daj 1 szt."));
-        lore.add(colorize("&ePrawy klik &7→ wybierz ilość"));
+        for (String line : plugin.getSkinConfig().getChangeTokenLore()) lore.add(colorize(line));
         meta.lore(lore);
         meta.getPersistentDataContainer().set(
-            new NamespacedKey(plugin, NBT_IS_CHANGE),
-            PersistentDataType.BYTE, (byte)1);
+            new NamespacedKey(plugin, KEY_TOKEN_TYPE), PersistentDataType.STRING, TOKEN_TYPE_CHANGE);
         item.setItemMeta(meta);
         return item;
     }
 
-    private ItemStack tabItem(Tab tab, boolean active) {
-        ItemStack item = new ItemStack(tab.mat);
+    public static ItemStack createSkinToken(SkinDefinition skin) {
+        SkinStudio plugin = SkinStudio.getInstance();
+        ItemStack item = new ItemStack(plugin.getSkinConfig().getSkinTokenMaterial());
         ItemMeta meta = item.getItemMeta();
-        meta.displayName(colorize((active ? "&f&l" : "&7") + tab.label));
+        meta.displayName(colorize(skin.getDisplayName()));
         List<Component> lore = new ArrayList<>();
-        lore.add(colorize(active ? "&7▶ Aktualnie wybrana" : "&7Kliknij aby otworzyć"));
+        lore.add(colorize("&7Model: &f" + skin.getItemModel()));
+        lore.add(colorize("&7ID: &f" + skin.getId()));
+        lore.add(Component.empty());
+        lore.add(colorize("&eUżyj w Skin Studio aby nałożyć skin."));
         meta.lore(lore);
-        meta.getPersistentDataContainer().set(
-            new NamespacedKey(plugin, NBT_TAB_NAME),
-            PersistentDataType.STRING, tab.name());
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        pdc.set(new NamespacedKey(plugin, KEY_TOKEN_TYPE), PersistentDataType.STRING, TOKEN_TYPE_SKIN);
+        pdc.set(new NamespacedKey(plugin, KEY_SKIN_ID),    PersistentDataType.STRING, skin.getId());
         item.setItemMeta(meta);
         return item;
     }
 
-    private ItemStack infoItem() {
-        ItemStack item = new ItemStack(Material.BOOK);
-        ItemMeta meta = item.getItemMeta();
-        meta.displayName(colorize("&eℹ Jak używać tokenów"));
-        meta.lore(List.of(
-            colorize("&7Token Zmiany — wymagany zawsze."),
-            colorize("&7Token Skina — określa wygląd."),
-            Component.empty(),
-            colorize("&7Gracz potrzebuje obu w /skinstudio.")));
-        item.setItemMeta(meta);
-        return item;
+    // ── Odczyt tokenów ───────────────────────────────────────
+
+    public static boolean isChangeToken(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return false;
+        return TOKEN_TYPE_CHANGE.equals(item.getItemMeta().getPersistentDataContainer()
+            .get(new NamespacedKey(SkinStudio.getInstance(), KEY_TOKEN_TYPE), PersistentDataType.STRING));
     }
 
-    private ItemStack glass(Material mat) {
-        ItemStack item = new ItemStack(mat);
-        ItemMeta meta = item.getItemMeta();
-        meta.displayName(Component.empty());
-        item.setItemMeta(meta);
-        return item;
+    public static boolean isSkinToken(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return false;
+        return TOKEN_TYPE_SKIN.equals(item.getItemMeta().getPersistentDataContainer()
+            .get(new NamespacedKey(SkinStudio.getInstance(), KEY_TOKEN_TYPE), PersistentDataType.STRING));
     }
 
-    // ── Eventy — kluczowe: sprawdzamy InventoryHolder ────────
-
-    private boolean isOurGui(Inventory inv) {
-        return inv != null && inv.getHolder() instanceof SkinAdminHolder;
+    public static String getSkinIdFromToken(ItemStack item) {
+        if (!isSkinToken(item)) return null;
+        return item.getItemMeta().getPersistentDataContainer()
+            .get(new NamespacedKey(SkinStudio.getInstance(), KEY_SKIN_ID), PersistentDataType.STRING);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
-    public void onInventoryClick(InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof Player player)) return;
+    public static boolean hasCustomSkin(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return false;
+        return item.getItemMeta().getPersistentDataContainer()
+            .has(new NamespacedKey(SkinStudio.getInstance(), KEY_ORIGINAL_MODEL), PersistentDataType.STRING);
+    }
 
-        // Sprawdź czy kliknięto w nasze GUI (przez InventoryHolder)
-        Inventory topInv = event.getInventory();
-        if (!isOurGui(topInv)) return;
+    // ── Aplikowanie / zdejmowanie skina ──────────────────────
 
-        // ZAWSZE anuluj — żaden item nie wyjdzie z GUI
-        event.setCancelled(true);
+    public static ItemStack applySkin(ItemStack item, SkinDefinition skin) {
+        ItemStack result = item.clone();
+        ItemMeta meta = result.getItemMeta();
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        SkinStudio plugin = SkinStudio.getInstance();
 
-        int raw = event.getRawSlot();
+        NamespacedKey origModelKey = new NamespacedKey(plugin, KEY_ORIGINAL_MODEL);
+        NamespacedKey origEquipKey = new NamespacedKey(plugin, KEY_ORIGINAL_EQUIP);
+        NamespacedKey hadEquipKey  = new NamespacedKey(plugin, KEY_HAD_EQUIPPABLE);
 
-        // Kliknięcie w ekwipunku gracza (dolna część) — ignoruj
-        if (raw < 0 || raw >= GUI_SIZE) return;
+        // Zapisz oryginalny item_model (tylko raz)
+        if (!pdc.has(origModelKey, PersistentDataType.STRING)) {
+            NamespacedKey cur = meta.getItemModel();
+            pdc.set(origModelKey, PersistentDataType.STRING, cur != null ? cur.toString() : "");
+        }
 
-        ItemStack clicked = topInv.getItem(raw);
-        if (clicked == null || clicked.getType() == Material.AIR) return;
-        if (!clicked.hasItemMeta()) return;
+        // Ustaw nowy item_model
+        meta.setItemModel(parseKey(skin.getItemModel()));
 
-        var pdc = clicked.getItemMeta().getPersistentDataContainer();
-        NamespacedKey tabKey    = new NamespacedKey(plugin, NBT_TAB_NAME);
-        NamespacedKey skinKey   = new NamespacedKey(plugin, NBT_SKIN_ID);
-        NamespacedKey changeKey = new NamespacedKey(plugin, NBT_IS_CHANGE);
-
-        // Kliknięcie w zakładkę
-        if (pdc.has(tabKey, PersistentDataType.STRING)) {
-            String tabName = pdc.get(tabKey, PersistentDataType.STRING);
-            try {
-                Tab newTab = Tab.valueOf(tabName);
-                Tab current = currentTab.getOrDefault(player.getUniqueId(), Tab.BRONZE);
-                if (newTab != current) {
-                    player.playSound(player, Sound.UI_BUTTON_CLICK, 0.5f, 1f);
-                    Tab finalTab = newTab;
-                    Bukkit.getScheduler().runTask(plugin, () -> openTab(player, finalTab));
+        // Obsługa zbroi — equipment asset (tekstura na ciele gracza)
+        if (skin.hasEquipmentAsset()) {
+            EquipmentSlot eqSlot = getEquipmentSlot(item.getType());
+            if (eqSlot != null) {
+                // Zapisz czy miał equippable (tylko raz)
+                if (!pdc.has(hadEquipKey, PersistentDataType.BYTE)) {
+                    pdc.set(hadEquipKey, PersistentDataType.BYTE,
+                        meta.hasEquippable() ? (byte)1 : (byte)0);
                 }
-            } catch (Exception ignored) {}
-            return;
+                // Zapisz oryginalny model equippable (tylko raz)
+                if (!pdc.has(origEquipKey, PersistentDataType.STRING)) {
+                    String origEquip = "";
+                    if (meta.hasEquippable()) {
+                        NamespacedKey m = meta.getEquippable().getModel();
+                        if (m != null) origEquip = m.toString();
+                    }
+                    pdc.set(origEquipKey, PersistentDataType.STRING, origEquip);
+                }
+
+                // Pobierz lub utwórz EquippableComponent
+                // KLUCZOWE: getEquippable() na item który go nie ma — tworzy nowy
+                // ale bez ustawionego slotu, co blokuje zakładanie na głowę itp.
+                // Dlatego tworzymy ItemStack wzorcowy z właściwym materiałem
+                // i pobieramy z niego equippable ze słusznym slotem
+                EquippableComponent eq;
+                if (meta.hasEquippable()) {
+                    eq = meta.getEquippable();
+                } else {
+                    // Utwórz wzorcowy item tego samego typu żeby dostać equippable z slotem
+                    ItemStack template = new ItemStack(item.getType());
+                    ItemMeta templateMeta = template.getItemMeta();
+                    if (templateMeta.hasEquippable()) {
+                        eq = templateMeta.getEquippable();
+                    } else {
+                        // Ostateczny fallback — pobierz i ustaw slot ręcznie
+                        eq = meta.getEquippable();
+                        eq.setSlot(eqSlot);
+                    }
+                }
+                eq.setModel(parseKey(skin.getEquipmentAsset()));
+                meta.setEquippable(eq);
+            }
         }
 
-        // Kliknięcie w Token Zmiany
-        if (pdc.has(changeKey, PersistentDataType.BYTE)) {
-            handleClick(player, event.getClick(), null);
-            return;
-        }
-
-        // Kliknięcie w skin
-        if (pdc.has(skinKey, PersistentDataType.STRING)) {
-            String skinId = pdc.get(skinKey, PersistentDataType.STRING);
-            SkinDefinition skin = plugin.getSkinConfig().getSkin(skinId);
-            if (skin != null) handleClick(player, event.getClick(), skin);
-        }
+        result.setItemMeta(meta);
+        return result;
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onInventoryDrag(InventoryDragEvent event) {
-        if (!isOurGui(event.getInventory())) return;
-        event.setCancelled(true);
-    }
+    public static ItemStack removeSkin(ItemStack item) {
+        if (!hasCustomSkin(item)) return null;
+        ItemStack result = item.clone();
+        ItemMeta meta = result.getItemMeta();
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        SkinStudio plugin = SkinStudio.getInstance();
 
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onInventoryMoveItem(InventoryMoveItemEvent event) {
-        if (isOurGui(event.getSource()) || isOurGui(event.getDestination()))
-            event.setCancelled(true);
-    }
+        NamespacedKey origModelKey = new NamespacedKey(plugin, KEY_ORIGINAL_MODEL);
+        NamespacedKey origEquipKey = new NamespacedKey(plugin, KEY_ORIGINAL_EQUIP);
+        NamespacedKey hadEquipKey  = new NamespacedKey(plugin, KEY_HAD_EQUIPPABLE);
 
-    @EventHandler
-    public void onInventoryClose(InventoryCloseEvent event) {
-        if (!isOurGui(event.getInventory())) return;
-        // Nic specjalnego — InventoryHolder automatycznie zarządza życiem inwentarza
-    }
+        String origModel = pdc.get(origModelKey, PersistentDataType.STRING);
+        String origEquip = pdc.getOrDefault(origEquipKey, PersistentDataType.STRING, "");
+        byte   hadEquip  = pdc.getOrDefault(hadEquipKey, PersistentDataType.BYTE, (byte)0);
 
-    // ── Logika tokenów ───────────────────────────────────────
+        pdc.remove(origModelKey);
+        pdc.remove(origEquipKey);
+        pdc.remove(hadEquipKey);
 
-    private void handleClick(Player player, ClickType click, SkinDefinition skin) {
-        if (click == ClickType.LEFT) {
-            ItemStack token = (skin == null)
-                ? TokenUtil.createChangeToken()
-                : TokenUtil.createSkinToken(skin);
-            giveItem(player, token);
-            String name = (skin == null) ? "Token Zmiany" : skin.getDisplayName();
-            msg(player, "&aDodano: &f" + name);
-            player.playSound(player, Sound.ENTITY_ITEM_PICKUP, 1f, 1.2f);
+        // Przywróć item_model
+        meta.setItemModel(origModel != null && !origModel.isEmpty() ? parseKey(origModel) : null);
 
-        } else if (click == ClickType.RIGHT) {
-            String id = (skin == null) ? "__change__" : skin.getId();
-            awaitingAmount.put(player.getUniqueId(), id);
-            player.closeInventory();
-            msg(player, "&eWpisz ilość na czacie &7(1-64), lub &ccancel&7 aby anulować:");
-        }
-    }
-
-    public boolean handleChatInput(Player player, String message) {
-        if (!awaitingAmount.containsKey(player.getUniqueId())) return false;
-        String id = awaitingAmount.remove(player.getUniqueId());
-
-        if (message.equalsIgnoreCase("cancel")) {
-            msg(player, "&7Anulowano.");
-            Bukkit.getScheduler().runTask(plugin, () -> openFor(player));
-            return true;
+        // Przywróć equippable
+        if (hadEquip == 0) {
+            // Nie miał equippable — usuń go
+            meta.setEquippable(null);
+        } else if (meta.hasEquippable()) {
+            // Miał equippable — przywróć oryginalny model
+            EquippableComponent eq = meta.getEquippable();
+            eq.setModel(origEquip.isEmpty() ? null : parseKey(origEquip));
+            meta.setEquippable(eq);
         }
 
-        int amount;
-        try { amount = Integer.parseInt(message.trim()); }
-        catch (NumberFormatException e) {
-            msg(player, "&cNieprawidłowa liczba — wpisz 1-64.");
-            awaitingAmount.put(player.getUniqueId(), id);
-            return true;
-        }
-
-        if (amount < 1 || amount > 64) {
-            msg(player, "&cIlość musi być między 1 a 64.");
-            awaitingAmount.put(player.getUniqueId(), id);
-            return true;
-        }
-
-        ItemStack token;
-        String name;
-        if ("__change__".equals(id)) {
-            token = TokenUtil.createChangeToken();
-            name = "Token Zmiany";
-        } else {
-            SkinDefinition skin = plugin.getSkinConfig().getSkin(id);
-            if (skin == null) { msg(player, "&cBłąd: skin nie istnieje."); return true; }
-            token = TokenUtil.createSkinToken(skin);
-            name = skin.getDisplayName();
-        }
-        token.setAmount(amount);
-        giveItem(player, token);
-        msg(player, "&aDodano &f" + amount + "x &f" + name);
-        player.playSound(player, Sound.ENTITY_ITEM_PICKUP, 1f, 1.2f);
-        Bukkit.getScheduler().runTask(plugin, () -> openFor(player));
-        return true;
-    }
-
-    public boolean isAwaitingInput(Player player) {
-        return awaitingAmount.containsKey(player.getUniqueId());
+        result.setItemMeta(meta);
+        return result;
     }
 
     // ── Pomocnicze ───────────────────────────────────────────
 
-    private List<SkinDefinition> getSortedSkins(Tab tab) {
-        List<SkinDefinition> skins = new ArrayList<>();
-        for (SkinDefinition s : plugin.getSkinConfig().getAllSkins().values())
-            if (tab.prefix != null && s.getId().startsWith(tab.prefix + "_"))
-                skins.add(s);
-        String[] order = {"sword","axe","bow","crossbow","scythe","trident",
-                          "helmet","chestplate","leggings","boots"};
-        List<SkinDefinition> sorted = new ArrayList<>();
-        for (String suffix : order)
-            for (SkinDefinition s : skins)
-                if (s.getId().endsWith("_" + suffix)) { sorted.add(s); break; }
-        for (SkinDefinition s : skins) if (!sorted.contains(s)) sorted.add(s);
-        return sorted;
-    }
-
-    private void giveItem(Player player, ItemStack item) {
-        player.getInventory().addItem(item).values()
-            .forEach(i -> player.getWorld().dropItemNaturally(player.getLocation(), i));
-    }
-
-    private NamespacedKey parseKey(String key) {
+    private static NamespacedKey parseKey(String key) {
         if (key == null || key.isEmpty()) return null;
         String[] p = key.split(":", 2);
         return p.length == 2 ? new NamespacedKey(p[0], p[1]) : NamespacedKey.minecraft(key);
     }
 
-    private void msg(Player player, String m) {
-        player.sendMessage(colorize("&8[&6SkinStudio&8] &r" + m));
+    private static EquipmentSlot getEquipmentSlot(Material material) {
+        String name = material.name();
+        if (name.endsWith("_HELMET"))     return EquipmentSlot.HEAD;
+        if (name.endsWith("_CHESTPLATE")) return EquipmentSlot.CHEST;
+        if (name.endsWith("_LEGGINGS"))   return EquipmentSlot.LEGS;
+        if (name.endsWith("_BOOTS"))      return EquipmentSlot.FEET;
+        return null;
     }
 
-    private Component colorize(String text) {
+    private static Component colorize(String text) {
         return LegacyComponentSerializer.legacyAmpersand().deserialize(text);
     }
 }
