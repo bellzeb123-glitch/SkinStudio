@@ -4,8 +4,10 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.components.EquippableComponent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import pl.skinstudio.SkinStudio;
@@ -16,10 +18,10 @@ import java.util.List;
 
 public class TokenUtil {
 
-    // Klucze NBT
-    private static final String KEY_TOKEN_TYPE = "skinstudio_token_type";
-    private static final String KEY_SKIN_ID    = "skinstudio_skin_id";
-    private static final String KEY_ORIGINAL_MODEL = "skinstudio_original_model";
+    private static final String KEY_TOKEN_TYPE      = "skinstudio_token_type";
+    private static final String KEY_SKIN_ID         = "skinstudio_skin_id";
+    private static final String KEY_ORIGINAL_MODEL  = "skinstudio_original_model";
+    private static final String KEY_ORIGINAL_EQUIP  = "skinstudio_original_equip";
 
     private static final String TOKEN_TYPE_CHANGE = "change";
     private static final String TOKEN_TYPE_SKIN   = "skin";
@@ -28,35 +30,23 @@ public class TokenUtil {
 
     public static ItemStack createChangeToken() {
         SkinStudio plugin = SkinStudio.getInstance();
-        Material mat = plugin.getSkinConfig().getChangeTokenMaterial();
-        ItemStack item = new ItemStack(mat);
+        ItemStack item = new ItemStack(plugin.getSkinConfig().getChangeTokenMaterial());
         ItemMeta meta = item.getItemMeta();
-
-        String rawName = plugin.getSkinConfig().getChangeTokenName();
-        meta.displayName(colorize(rawName));
-
-        List<String> rawLore = plugin.getSkinConfig().getChangeTokenLore();
+        meta.displayName(colorize(plugin.getSkinConfig().getChangeTokenName()));
         List<Component> lore = new ArrayList<>();
-        for (String line : rawLore) {
-            lore.add(colorize(line));
-        }
+        for (String line : plugin.getSkinConfig().getChangeTokenLore()) lore.add(colorize(line));
         meta.lore(lore);
-
-        NamespacedKey key = new NamespacedKey(plugin, KEY_TOKEN_TYPE);
-        meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, TOKEN_TYPE_CHANGE);
-
+        meta.getPersistentDataContainer().set(
+            new NamespacedKey(plugin, KEY_TOKEN_TYPE), PersistentDataType.STRING, TOKEN_TYPE_CHANGE);
         item.setItemMeta(meta);
         return item;
     }
 
     public static ItemStack createSkinToken(SkinDefinition skin) {
         SkinStudio plugin = SkinStudio.getInstance();
-        Material mat = plugin.getSkinConfig().getSkinTokenMaterial();
-        ItemStack item = new ItemStack(mat);
+        ItemStack item = new ItemStack(plugin.getSkinConfig().getSkinTokenMaterial());
         ItemMeta meta = item.getItemMeta();
-
         meta.displayName(colorize(skin.getDisplayName()));
-
         List<Component> lore = new ArrayList<>();
         lore.add(colorize("&7Model: &f" + skin.getItemModel()));
         lore.add(colorize("&7ID: &f" + skin.getId()));
@@ -64,11 +54,9 @@ public class TokenUtil {
         lore.add(colorize("&eUżyj w Skin Studio aby"));
         lore.add(colorize("&enałożyć skin na przedmiot."));
         meta.lore(lore);
-
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
         pdc.set(new NamespacedKey(plugin, KEY_TOKEN_TYPE), PersistentDataType.STRING, TOKEN_TYPE_SKIN);
         pdc.set(new NamespacedKey(plugin, KEY_SKIN_ID),    PersistentDataType.STRING, skin.getId());
-
         item.setItemMeta(meta);
         return item;
     }
@@ -77,110 +65,106 @@ public class TokenUtil {
 
     public static boolean isChangeToken(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return false;
-        PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
-        NamespacedKey key = new NamespacedKey(SkinStudio.getInstance(), KEY_TOKEN_TYPE);
-        return TOKEN_TYPE_CHANGE.equals(pdc.get(key, PersistentDataType.STRING));
+        return TOKEN_TYPE_CHANGE.equals(item.getItemMeta().getPersistentDataContainer()
+            .get(new NamespacedKey(SkinStudio.getInstance(), KEY_TOKEN_TYPE), PersistentDataType.STRING));
     }
 
     public static boolean isSkinToken(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return false;
-        PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
-        NamespacedKey key = new NamespacedKey(SkinStudio.getInstance(), KEY_TOKEN_TYPE);
-        return TOKEN_TYPE_SKIN.equals(pdc.get(key, PersistentDataType.STRING));
+        return TOKEN_TYPE_SKIN.equals(item.getItemMeta().getPersistentDataContainer()
+            .get(new NamespacedKey(SkinStudio.getInstance(), KEY_TOKEN_TYPE), PersistentDataType.STRING));
     }
 
     public static String getSkinIdFromToken(ItemStack item) {
         if (!isSkinToken(item)) return null;
-        PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
-        NamespacedKey key = new NamespacedKey(SkinStudio.getInstance(), KEY_SKIN_ID);
-        return pdc.get(key, PersistentDataType.STRING);
+        return item.getItemMeta().getPersistentDataContainer()
+            .get(new NamespacedKey(SkinStudio.getInstance(), KEY_SKIN_ID), PersistentDataType.STRING);
     }
 
     // ── Operacje na przedmiotach ─────────────────────────────
 
     public static boolean hasCustomSkin(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return false;
-        PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
-        NamespacedKey key = new NamespacedKey(SkinStudio.getInstance(), KEY_ORIGINAL_MODEL);
-        return pdc.has(key, PersistentDataType.STRING);
-    }
-
-    public static String getOriginalModel(ItemStack item) {
-        if (!hasCustomSkin(item)) return null;
-        PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
-        NamespacedKey key = new NamespacedKey(SkinStudio.getInstance(), KEY_ORIGINAL_MODEL);
-        return pdc.get(key, PersistentDataType.STRING);
+        return item.getItemMeta().getPersistentDataContainer()
+            .has(new NamespacedKey(SkinStudio.getInstance(), KEY_ORIGINAL_MODEL), PersistentDataType.STRING);
     }
 
     /**
-     * Nakłada skin na przedmiot.
-     * Zapisuje oryginalny item_model w NBT (lub pusty string jeśli nie miał).
-     * Zwraca zmodyfikowany ItemStack.
+     * Nakłada skin na przedmiot — ustawia item_model i opcjonalnie equippable asset.
      */
-    @SuppressWarnings("UnstableApiUsage")
-    public static ItemStack applySkin(ItemStack item, String newModel) {
+    public static ItemStack applySkin(ItemStack item, SkinDefinition skin) {
         ItemStack result = item.clone();
         ItemMeta meta = result.getItemMeta();
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
         SkinStudio plugin = SkinStudio.getInstance();
-        NamespacedKey originalKey = new NamespacedKey(plugin, KEY_ORIGINAL_MODEL);
 
-        // Zapisz oryginalny model tylko jeśli jeszcze nie ma zapisanego
-        // (nadpisanie skina — zachowujemy najstarszy oryginał)
-        if (!pdc.has(originalKey, PersistentDataType.STRING)) {
-            // Sprawdź czy item już ma item_model komponent
-            NamespacedKey modelKey = new NamespacedKey("minecraft", "item_model");
-            String currentModel = pdc.getOrDefault(
-                new NamespacedKey(plugin, "current_item_model"),
-                PersistentDataType.STRING,
-                ""
-            );
-            // Użyj item model z meta jeśli dostępny
-            try {
-                var customModelData = meta.getCustomModelData();
-                // fallback - zapisujemy pusty string jako "brak oryginalnego modelu"
-            } catch (Exception ignored) {}
-            pdc.set(originalKey, PersistentDataType.STRING, currentModel);
+        NamespacedKey originalModelKey = new NamespacedKey(plugin, KEY_ORIGINAL_MODEL);
+        NamespacedKey originalEquipKey = new NamespacedKey(plugin, KEY_ORIGINAL_EQUIP);
+
+        // Zapisz oryginalny item_model (tylko jeśli jeszcze nie zapisany)
+        if (!pdc.has(originalModelKey, PersistentDataType.STRING)) {
+            NamespacedKey currentModel = meta.getItemModel();
+            pdc.set(originalModelKey, PersistentDataType.STRING,
+                currentModel != null ? currentModel.toString() : "");
         }
 
-        // Ustaw nowy item_model przez komponent
-        meta.setItemModel(new NamespacedKey(
-            newModel.contains(":") ? newModel.split(":")[0] : "minecraft",
-            newModel.contains(":") ? newModel.split(":")[1] : newModel
-        ));
+        // Zapisz oryginalny equipment asset (tylko jeśli jeszcze nie zapisany)
+        if (!pdc.has(originalEquipKey, PersistentDataType.STRING)) {
+            String currentEquip = "";
+            if (meta.hasEquippable()) {
+                EquippableComponent eq = meta.getEquippable();
+                NamespacedKey assetKey = eq.getAssetId();
+                if (assetKey != null) currentEquip = assetKey.toString();
+            }
+            pdc.set(originalEquipKey, PersistentDataType.STRING, currentEquip);
+        }
+
+        // Ustaw nowy item_model
+        meta.setItemModel(parseKey(skin.getItemModel()));
+
+        // Ustaw equipment asset jeśli zbroja
+        if (skin.hasEquipmentAsset()) {
+            EquipmentSlot slot = getEquipmentSlot(item.getType());
+            if (slot != null) {
+                EquippableComponent eq = meta.hasEquippable()
+                    ? meta.getEquippable()
+                    : plugin.getServer().getItemFactory().getEquippableComponent();
+                eq.setAssetId(parseKey(skin.getEquipmentAsset()));
+                meta.setEquippable(eq);
+            }
+        }
 
         result.setItemMeta(meta);
         return result;
     }
 
     /**
-     * Zdejmuje skin z przedmiotu, przywracając oryginalny item_model.
-     * Zwraca zmodyfikowany ItemStack lub null jeśli item nie miał skina.
+     * Zdejmuje skin — przywraca oryginalny item_model i equipment asset.
      */
-    @SuppressWarnings("UnstableApiUsage")
     public static ItemStack removeSkin(ItemStack item) {
         if (!hasCustomSkin(item)) return null;
-
         ItemStack result = item.clone();
         ItemMeta meta = result.getItemMeta();
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
         SkinStudio plugin = SkinStudio.getInstance();
 
-        NamespacedKey originalKey = new NamespacedKey(plugin, KEY_ORIGINAL_MODEL);
-        String originalModel = pdc.get(originalKey, PersistentDataType.STRING);
+        NamespacedKey originalModelKey = new NamespacedKey(plugin, KEY_ORIGINAL_MODEL);
+        NamespacedKey originalEquipKey = new NamespacedKey(plugin, KEY_ORIGINAL_EQUIP);
 
-        // Usuń zapisany oryginalny model z NBT
-        pdc.remove(originalKey);
+        String originalModel = pdc.get(originalModelKey, PersistentDataType.STRING);
+        String originalEquip = pdc.getOrDefault(originalEquipKey, PersistentDataType.STRING, "");
 
-        if (originalModel == null || originalModel.isEmpty()) {
-            // Przedmiot nie miał oryginalnego modelu — usuń item_model całkowicie
-            meta.setItemModel(null);
-        } else {
-            // Przywróć oryginalny model
-            meta.setItemModel(new NamespacedKey(
-                originalModel.contains(":") ? originalModel.split(":")[0] : "minecraft",
-                originalModel.contains(":") ? originalModel.split(":")[1] : originalModel
-            ));
+        pdc.remove(originalModelKey);
+        pdc.remove(originalEquipKey);
+
+        // Przywróć item_model
+        meta.setItemModel(originalModel != null && !originalModel.isEmpty() ? parseKey(originalModel) : null);
+
+        // Przywróć equipment asset
+        if (meta.hasEquippable()) {
+            EquippableComponent eq = meta.getEquippable();
+            eq.setAssetId(originalEquip.isEmpty() ? null : parseKey(originalEquip));
+            meta.setEquippable(eq);
         }
 
         result.setItemMeta(meta);
@@ -188,6 +172,22 @@ public class TokenUtil {
     }
 
     // ── Pomocnicze ───────────────────────────────────────────
+
+    private static NamespacedKey parseKey(String key) {
+        if (key == null || key.isEmpty()) return null;
+        String[] parts = key.split(":", 2);
+        if (parts.length == 2) return new NamespacedKey(parts[0], parts[1]);
+        return NamespacedKey.minecraft(key);
+    }
+
+    private static EquipmentSlot getEquipmentSlot(Material material) {
+        String name = material.name();
+        if (name.endsWith("_HELMET"))     return EquipmentSlot.HEAD;
+        if (name.endsWith("_CHESTPLATE")) return EquipmentSlot.CHEST;
+        if (name.endsWith("_LEGGINGS"))   return EquipmentSlot.LEGS;
+        if (name.endsWith("_BOOTS"))      return EquipmentSlot.FEET;
+        return null;
+    }
 
     private static Component colorize(String text) {
         return LegacyComponentSerializer.legacyAmpersand().deserialize(text);
