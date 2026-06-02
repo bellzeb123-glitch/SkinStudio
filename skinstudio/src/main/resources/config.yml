@@ -2,7 +2,6 @@
 #  SkinStudio - Konfiguracja
 # ============================================================
 
-# Nazwa przedmiotu Token Zmiany (gracz musi go mieć w GUI)
 change-token:
   display-name: "&6✦ Token Zmiany"
   material: NETHER_STAR
@@ -10,14 +9,15 @@ change-token:
     - "&7Wymagany do nałożenia"
     - "&7lub zdjęcia skina."
 
-# Materiał na którym bazuje Token Skina
 skin-token-material: PAPER
 
 # ============================================================
 #  Definicje skinów
-#  item-model    - dokładna ścieżka modelu z resource packu
-#  display-name  - nazwa wyświetlana tokenu
-#  item-types    - lista materiałów MC na które skin może być nałożony
+#  item-model      - model miniaturki w ekwipunku
+#  equipment-asset - asset_id dla tekstury na ciele gracza (tylko zbroje)
+#                    format: "namespace:nazwa" np. "elitemobs:bronze"
+#                    zostaw puste jeśli to broń (nie zbroja)
+#  item-types      - lista materiałów MC
 # ============================================================
 skins:
 
@@ -25,6 +25,7 @@ skins:
   bronze_sword:
     display-name: "&8[&6Brąz&8] &fToken Skina: Miecz"
     item-model: "elitemobs:gear/bronze_sword"
+    equipment-asset: ""
     item-types:
       - DIAMOND_SWORD
       - IRON_SWORD
@@ -36,6 +37,7 @@ skins:
   bronze_axe:
     display-name: "&8[&6Brąz&8] &fToken Skina: Topór"
     item-model: "elitemobs:gear/bronze_axe"
+    equipment-asset: ""
     item-types:
       - DIAMOND_AXE
       - IRON_AXE
@@ -47,18 +49,21 @@ skins:
   bronze_bow:
     display-name: "&8[&6Brąz&8] &fToken Skina: Łuk"
     item-model: "elitemobs:gear/bronze_bow"
+    equipment-asset: ""
     item-types:
       - BOW
 
   bronze_crossbow:
     display-name: "&8[&6Brąz&8] &fToken Skina: Kusza"
     item-model: "elitemobs:gear/bronze_crossbow"
+    equipment-asset: ""
     item-types:
       - CROSSBOW
 
   bronze_scythe:
     display-name: "&8[&6Brąz&8] &fToken Skina: Kosa"
     item-model: "elitemobs:gear/bronze_scythe"
+    equipment-asset: ""
     item-types:
       - DIAMOND_HOE
       - IRON_HOE
@@ -70,12 +75,14 @@ skins:
   bronze_trident:
     display-name: "&8[&6Brąz&8] &fToken Skina: Trójząb"
     item-model: "elitemobs:gear/bronze_trident"
+    equipment-asset: ""
     item-types:
       - TRIDENT
 
   bronze_helmet:
     display-name: "&8[&6Brąz&8] &fToken Skina: Hełm"
     item-model: "elitemobs:gear/bronze_helmet"
+    equipment-asset: "elitemobs:bronze"
     item-types:
       - DIAMOND_HELMET
       - IRON_HELMET
@@ -87,6 +94,7 @@ skins:
   bronze_chestplate:
     display-name: "&8[&6Brąz&8] &fToken Skina: Napierśnik"
     item-model: "elitemobs:gear/bronze_chestplate"
+    equipment-asset: "elitemobs:bronze"
     item-types:
       - DIAMOND_CHESTPLATE
       - IRON_CHESTPLATE
@@ -98,6 +106,7 @@ skins:
   bronze_leggings:
     display-name: "&8[&6Brąz&8] &fToken Skina: Spodnie"
     item-model: "elitemobs:gear/bronze_leggings"
+    equipment-asset: "elitemobs:bronze"
     item-types:
       - DIAMOND_LEGGINGS
       - IRON_LEGGINGS
@@ -109,6 +118,7 @@ skins:
   bronze_boots:
     display-name: "&8[&6Brąz&8] &fToken Skina: Buty"
     item-model: "elitemobs:gear/bronze_boots"
+    equipment-asset: "elitemobs:bronze"
     item-types:
       - DIAMOND_BOOTS
       - IRON_BOOTS
@@ -121,6 +131,7 @@ skins:
   living_sword:
     display-name: "&8[&aŻyjący&8] &fToken Skina: Miecz"
     item-model: "elitemobs:gear/living_sword"
+    equipment-asset: ""
     item-types:
       - DIAMOND_SWORD
       - IRON_SWORD
@@ -132,6 +143,7 @@ skins:
   living_axe:
     display-name: "&8[&aŻyjący&8] &fToken Skina: Topór"
     item-model: "elitemobs:gear/living_axe"
+    equipment-asset: ""
     item-types:
       - DIAMOND_AXE
       - IRON_AXE
@@ -143,18 +155,21 @@ skins:
   living_bow:
     display-name: "&8[&aŻyjący&8] &fToken Skina: Łuk"
     item-model: "elitemobs:gear/living_bow"
+    equipment-asset: ""
     item-types:
       - BOW
 
   living_crossbow:
     display-name: "&8[&aŻyjący&8] &fToken Skina: Kusza"
     item-model: "elitemobs:gear/living_crossbow"
+    equipment-asset: ""
     item-types:
       - CROSSBOW
 
   living_scythe:
     display-name: "&8[&aŻyjący&8] &fToken Skina: Kosa"
     item-model: "elitemobs:gear/living_scythe"
+    equipment-asset: ""
     item-types:
       - DIAMOND_HOE
       - IRON_HOE
@@ -166,12 +181,14 @@ skins:
   living_trident:
     display-name: "&8[&aŻyjący&8] &fToken Skina: Trójząb"
     item-model: "elitemobs:gear/living_trident"
+    equipment-asset: ""
     item-types:
       - TRIDENT
 
   living_helmet:
     display-name: "&8[&aŻyjący&8] &fToken Skina: Hełm"
     item-model: "elitemobs:gear/living_helmet"
+    equipment-asset: "elitemobs:living"
     item-types:
       - DIAMOND_HELMET
       - IRON_HELMET
@@ -183,6 +200,7 @@ skins:
   living_chestplate:
     display-name: "&8[&aŻyjący&8] &fToken Skina: Napierśnik"
     item-model: "elitemobs:gear/living_chestplate"
+    equipment-asset: "elitemobs:living"
     item-types:
       - DIAMOND_CHESTPLATE
       - IRON_CHESTPLATE
@@ -194,6 +212,7 @@ skins:
   living_leggings:
     display-name: "&8[&aŻyjący&8] &fToken Skina: Spodnie"
     item-model: "elitemobs:gear/living_leggings"
+    equipment-asset: "elitemobs:living"
     item-types:
       - DIAMOND_LEGGINGS
       - IRON_LEGGINGS
@@ -205,6 +224,7 @@ skins:
   living_boots:
     display-name: "&8[&aŻyjący&8] &fToken Skina: Buty"
     item-model: "elitemobs:gear/living_boots"
+    equipment-asset: "elitemobs:living"
     item-types:
       - DIAMOND_BOOTS
       - IRON_BOOTS
@@ -217,6 +237,7 @@ skins:
   corrupted_sword:
     display-name: "&8[&5Skażony&8] &fToken Skina: Miecz"
     item-model: "elitemobs:gear/corrupted_sword"
+    equipment-asset: ""
     item-types:
       - DIAMOND_SWORD
       - IRON_SWORD
@@ -228,6 +249,7 @@ skins:
   corrupted_axe:
     display-name: "&8[&5Skażony&8] &fToken Skina: Topór"
     item-model: "elitemobs:gear/corrupted_axe"
+    equipment-asset: ""
     item-types:
       - DIAMOND_AXE
       - IRON_AXE
@@ -239,18 +261,21 @@ skins:
   corrupted_bow:
     display-name: "&8[&5Skażony&8] &fToken Skina: Łuk"
     item-model: "elitemobs:gear/corrupted_bow"
+    equipment-asset: ""
     item-types:
       - BOW
 
   corrupted_crossbow:
     display-name: "&8[&5Skażony&8] &fToken Skina: Kusza"
     item-model: "elitemobs:gear/corrupted_crossbow"
+    equipment-asset: ""
     item-types:
       - CROSSBOW
 
   corrupted_scythe:
     display-name: "&8[&5Skażony&8] &fToken Skina: Kosa"
     item-model: "elitemobs:gear/corrupted_scythe"
+    equipment-asset: ""
     item-types:
       - DIAMOND_HOE
       - IRON_HOE
@@ -262,12 +287,14 @@ skins:
   corrupted_trident:
     display-name: "&8[&5Skażony&8] &fToken Skina: Trójząb"
     item-model: "elitemobs:gear/corrupted_trident"
+    equipment-asset: ""
     item-types:
       - TRIDENT
 
   corrupted_helmet:
     display-name: "&8[&5Skażony&8] &fToken Skina: Hełm"
     item-model: "elitemobs:gear/corrupted_helmet"
+    equipment-asset: "elitemobs:corrupted"
     item-types:
       - DIAMOND_HELMET
       - IRON_HELMET
@@ -279,6 +306,7 @@ skins:
   corrupted_chestplate:
     display-name: "&8[&5Skażony&8] &fToken Skina: Napierśnik"
     item-model: "elitemobs:gear/corrupted_chestplate"
+    equipment-asset: "elitemobs:corrupted"
     item-types:
       - DIAMOND_CHESTPLATE
       - IRON_CHESTPLATE
@@ -290,6 +318,7 @@ skins:
   corrupted_leggings:
     display-name: "&8[&5Skażony&8] &fToken Skina: Spodnie"
     item-model: "elitemobs:gear/corrupted_leggings"
+    equipment-asset: "elitemobs:corrupted"
     item-types:
       - DIAMOND_LEGGINGS
       - IRON_LEGGINGS
@@ -301,6 +330,7 @@ skins:
   corrupted_boots:
     display-name: "&8[&5Skażony&8] &fToken Skina: Buty"
     item-model: "elitemobs:gear/corrupted_boots"
+    equipment-asset: "elitemobs:corrupted"
     item-types:
       - DIAMOND_BOOTS
       - IRON_BOOTS
@@ -313,6 +343,7 @@ skins:
   palladium_sword:
     display-name: "&8[&bPalladium&8] &fToken Skina: Miecz"
     item-model: "elitemobs:gear/palladium_sword"
+    equipment-asset: ""
     item-types:
       - DIAMOND_SWORD
       - IRON_SWORD
@@ -324,6 +355,7 @@ skins:
   palladium_axe:
     display-name: "&8[&bPalladium&8] &fToken Skina: Topór"
     item-model: "elitemobs:gear/palladium_axe"
+    equipment-asset: ""
     item-types:
       - DIAMOND_AXE
       - IRON_AXE
@@ -335,18 +367,21 @@ skins:
   palladium_bow:
     display-name: "&8[&bPalladium&8] &fToken Skina: Łuk"
     item-model: "elitemobs:gear/palladium_bow"
+    equipment-asset: ""
     item-types:
       - BOW
 
   palladium_crossbow:
     display-name: "&8[&bPalladium&8] &fToken Skina: Kusza"
     item-model: "elitemobs:gear/palladium_crossbow"
+    equipment-asset: ""
     item-types:
       - CROSSBOW
 
   palladium_scythe:
     display-name: "&8[&bPalladium&8] &fToken Skina: Kosa"
     item-model: "elitemobs:gear/palladium_scythe"
+    equipment-asset: ""
     item-types:
       - DIAMOND_HOE
       - IRON_HOE
@@ -358,12 +393,14 @@ skins:
   palladium_trident:
     display-name: "&8[&bPalladium&8] &fToken Skina: Trójząb"
     item-model: "elitemobs:gear/palladium_trident"
+    equipment-asset: ""
     item-types:
       - TRIDENT
 
   palladium_helmet:
     display-name: "&8[&bPalladium&8] &fToken Skina: Hełm"
     item-model: "elitemobs:gear/palladium_helmet"
+    equipment-asset: "elitemobs:palladium"
     item-types:
       - DIAMOND_HELMET
       - IRON_HELMET
@@ -375,6 +412,7 @@ skins:
   palladium_chestplate:
     display-name: "&8[&bPalladium&8] &fToken Skina: Napierśnik"
     item-model: "elitemobs:gear/palladium_chestplate"
+    equipment-asset: "elitemobs:palladium"
     item-types:
       - DIAMOND_CHESTPLATE
       - IRON_CHESTPLATE
@@ -386,6 +424,7 @@ skins:
   palladium_leggings:
     display-name: "&8[&bPalladium&8] &fToken Skina: Spodnie"
     item-model: "elitemobs:gear/palladium_leggings"
+    equipment-asset: "elitemobs:palladium"
     item-types:
       - DIAMOND_LEGGINGS
       - IRON_LEGGINGS
@@ -397,6 +436,7 @@ skins:
   palladium_boots:
     display-name: "&8[&bPalladium&8] &fToken Skina: Buty"
     item-model: "elitemobs:gear/palladium_boots"
+    equipment-asset: "elitemobs:palladium"
     item-types:
       - DIAMOND_BOOTS
       - IRON_BOOTS
@@ -409,6 +449,7 @@ skins:
   ultimatium_sword:
     display-name: "&8[&eUltimatium&8] &fToken Skina: Miecz"
     item-model: "elitemobs:gear/ultimatium_sword"
+    equipment-asset: ""
     item-types:
       - DIAMOND_SWORD
       - IRON_SWORD
@@ -420,6 +461,7 @@ skins:
   ultimatium_axe:
     display-name: "&8[&eUltimatium&8] &fToken Skina: Topór"
     item-model: "elitemobs:gear/ultimatium_axe"
+    equipment-asset: ""
     item-types:
       - DIAMOND_AXE
       - IRON_AXE
@@ -431,18 +473,21 @@ skins:
   ultimatium_bow:
     display-name: "&8[&eUltimatium&8] &fToken Skina: Łuk"
     item-model: "elitemobs:gear/ultimatium_bow"
+    equipment-asset: ""
     item-types:
       - BOW
 
   ultimatium_crossbow:
     display-name: "&8[&eUltimatium&8] &fToken Skina: Kusza"
     item-model: "elitemobs:gear/ultimatium_crossbow"
+    equipment-asset: ""
     item-types:
       - CROSSBOW
 
   ultimatium_scythe:
     display-name: "&8[&eUltimatium&8] &fToken Skina: Kosa"
     item-model: "elitemobs:gear/ultimatium_scythe"
+    equipment-asset: ""
     item-types:
       - DIAMOND_HOE
       - IRON_HOE
@@ -454,12 +499,14 @@ skins:
   ultimatium_trident:
     display-name: "&8[&eUltimatium&8] &fToken Skina: Trójząb"
     item-model: "elitemobs:gear/ultimatium_trident"
+    equipment-asset: ""
     item-types:
       - TRIDENT
 
   ultimatium_helmet:
     display-name: "&8[&eUltimatium&8] &fToken Skina: Hełm"
     item-model: "elitemobs:gear/ultimatium_helmet"
+    equipment-asset: "elitemobs:ultimatium"
     item-types:
       - DIAMOND_HELMET
       - IRON_HELMET
@@ -471,6 +518,7 @@ skins:
   ultimatium_chestplate:
     display-name: "&8[&eUltimatium&8] &fToken Skina: Napierśnik"
     item-model: "elitemobs:gear/ultimatium_chestplate"
+    equipment-asset: "elitemobs:ultimatium"
     item-types:
       - DIAMOND_CHESTPLATE
       - IRON_CHESTPLATE
@@ -482,6 +530,7 @@ skins:
   ultimatium_leggings:
     display-name: "&8[&eUltimatium&8] &fToken Skina: Spodnie"
     item-model: "elitemobs:gear/ultimatium_leggings"
+    equipment-asset: "elitemobs:ultimatium"
     item-types:
       - DIAMOND_LEGGINGS
       - IRON_LEGGINGS
@@ -493,6 +542,7 @@ skins:
   ultimatium_boots:
     display-name: "&8[&eUltimatium&8] &fToken Skina: Buty"
     item-model: "elitemobs:gear/ultimatium_boots"
+    equipment-asset: "elitemobs:ultimatium"
     item-types:
       - DIAMOND_BOOTS
       - IRON_BOOTS
@@ -505,6 +555,7 @@ skins:
   frost_palace_fire_sword:
     display-name: "&8[&cFrost Palace&8] &fToken Skina: Ognisty Miecz"
     item-model: "elitemobs:gear/frost_palace_fire_sword"
+    equipment-asset: ""
     item-types:
       - DIAMOND_SWORD
       - IRON_SWORD
@@ -514,6 +565,7 @@ skins:
   frost_palace_ice_sword:
     display-name: "&8[&bFrost Palace&8] &fToken Skina: Lodowy Miecz"
     item-model: "elitemobs:gear/frost_palace_ice_sword"
+    equipment-asset: ""
     item-types:
       - DIAMOND_SWORD
       - IRON_SWORD
@@ -523,6 +575,7 @@ skins:
   primis_gladius_sword:
     display-name: "&8[&dPrimis&8] &fToken Skina: Gladius"
     item-model: "elitemobs:gear/primis_gladius_sword"
+    equipment-asset: ""
     item-types:
       - DIAMOND_SWORD
       - IRON_SWORD
@@ -532,6 +585,7 @@ skins:
   magmaguys_toothpick:
     display-name: "&8[&6MagmaGuy&8] &fToken Skina: Wykałaczka"
     item-model: "elitemobs:gear/magmaguys_toothpick"
+    equipment-asset: ""
     item-types:
       - DIAMOND_SWORD
       - IRON_SWORD
