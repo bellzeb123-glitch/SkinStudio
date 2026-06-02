@@ -18,10 +18,10 @@ import java.util.List;
 
 public class TokenUtil {
 
-    private static final String KEY_TOKEN_TYPE      = "skinstudio_token_type";
-    private static final String KEY_SKIN_ID         = "skinstudio_skin_id";
-    private static final String KEY_ORIGINAL_MODEL  = "skinstudio_original_model";
-    private static final String KEY_ORIGINAL_EQUIP  = "skinstudio_original_equip";
+    private static final String KEY_TOKEN_TYPE     = "skinstudio_token_type";
+    private static final String KEY_SKIN_ID        = "skinstudio_skin_id";
+    private static final String KEY_ORIGINAL_MODEL = "skinstudio_original_model";
+    private static final String KEY_ORIGINAL_EQUIP = "skinstudio_original_equip";
 
     private static final String TOKEN_TYPE_CHANGE = "change";
     private static final String TOKEN_TYPE_SKIN   = "skin";
@@ -90,7 +90,7 @@ public class TokenUtil {
     }
 
     /**
-     * Nakłada skin na przedmiot — ustawia item_model i opcjonalnie equippable asset.
+     * Nakłada skin — ustawia item_model i opcjonalnie equippable model (tekstura zbroi na ciele).
      */
     public static ItemStack applySkin(ItemStack item, SkinDefinition skin) {
         ItemStack result = item.clone();
@@ -101,35 +101,35 @@ public class TokenUtil {
         NamespacedKey originalModelKey = new NamespacedKey(plugin, KEY_ORIGINAL_MODEL);
         NamespacedKey originalEquipKey = new NamespacedKey(plugin, KEY_ORIGINAL_EQUIP);
 
-        // Zapisz oryginalny item_model (tylko jeśli jeszcze nie zapisany)
+        // Zapisz oryginalny item_model (tylko raz — przy pierwszym nałożeniu)
         if (!pdc.has(originalModelKey, PersistentDataType.STRING)) {
             NamespacedKey currentModel = meta.getItemModel();
             pdc.set(originalModelKey, PersistentDataType.STRING,
                 currentModel != null ? currentModel.toString() : "");
         }
 
-        // Zapisz oryginalny equipment asset (tylko jeśli jeszcze nie zapisany)
+        // Zapisz oryginalny equippable model (tylko raz)
         if (!pdc.has(originalEquipKey, PersistentDataType.STRING)) {
             String currentEquip = "";
             if (meta.hasEquippable()) {
                 EquippableComponent eq = meta.getEquippable();
-                NamespacedKey assetKey = eq.getAssetId();
-                if (assetKey != null) currentEquip = assetKey.toString();
+                NamespacedKey modelKey = eq.getModel();
+                if (modelKey != null) currentEquip = modelKey.toString();
             }
             pdc.set(originalEquipKey, PersistentDataType.STRING, currentEquip);
         }
 
-        // Ustaw nowy item_model
+        // Ustaw nowy item_model (miniaturka)
         meta.setItemModel(parseKey(skin.getItemModel()));
 
-        // Ustaw equipment asset jeśli zbroja
+        // Ustaw equippable model (tekstura na ciele gracza) — tylko dla zbroi
         if (skin.hasEquipmentAsset()) {
             EquipmentSlot slot = getEquipmentSlot(item.getType());
             if (slot != null) {
                 EquippableComponent eq = meta.hasEquippable()
                     ? meta.getEquippable()
-                    : plugin.getServer().getItemFactory().getEquippableComponent();
-                eq.setAssetId(parseKey(skin.getEquipmentAsset()));
+                    : meta.getEquippable(); // getEquippable() tworzy nowy jeśli nie istnieje
+                eq.setModel(parseKey(skin.getEquipmentAsset()));
                 meta.setEquippable(eq);
             }
         }
@@ -139,7 +139,7 @@ public class TokenUtil {
     }
 
     /**
-     * Zdejmuje skin — przywraca oryginalny item_model i equipment asset.
+     * Zdejmuje skin — przywraca oryginalny item_model i equippable model.
      */
     public static ItemStack removeSkin(ItemStack item) {
         if (!hasCustomSkin(item)) return null;
@@ -158,12 +158,13 @@ public class TokenUtil {
         pdc.remove(originalEquipKey);
 
         // Przywróć item_model
-        meta.setItemModel(originalModel != null && !originalModel.isEmpty() ? parseKey(originalModel) : null);
+        meta.setItemModel(originalModel != null && !originalModel.isEmpty()
+            ? parseKey(originalModel) : null);
 
-        // Przywróć equipment asset
+        // Przywróć equippable model
         if (meta.hasEquippable()) {
             EquippableComponent eq = meta.getEquippable();
-            eq.setAssetId(originalEquip.isEmpty() ? null : parseKey(originalEquip));
+            eq.setModel(originalEquip.isEmpty() ? null : parseKey(originalEquip));
             meta.setEquippable(eq);
         }
 
