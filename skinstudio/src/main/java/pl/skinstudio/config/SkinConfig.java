@@ -28,36 +28,29 @@ public class SkinConfig {
         }
 
         for (String id : section.getKeys(false)) {
-            ConfigurationSection skinSection = section.getConfigurationSection(id);
-            if (skinSection == null) continue;
+            ConfigurationSection s = section.getConfigurationSection(id);
+            if (s == null) continue;
 
-            String displayName = skinSection.getString("display-name", "&fToken Skina");
-            String itemModel = skinSection.getString("item-model", "");
-            List<String> typeNames = skinSection.getStringList("item-types");
+            String displayName    = s.getString("display-name", "&fToken Skina");
+            String itemModel      = s.getString("item-model", "");
+            String equipmentAsset = s.getString("equipment-asset", "");
+            List<String> typeNames = s.getStringList("item-types");
 
             List<Material> materials = new ArrayList<>();
             for (String typeName : typeNames) {
                 Material mat = Material.getMaterial(typeName.toUpperCase());
-                if (mat != null) {
-                    materials.add(mat);
-                } else {
-                    plugin.getLogger().warning("Nieznany materiał '" + typeName + "' w skinie: " + id);
-                }
+                if (mat != null) materials.add(mat);
+                else plugin.getLogger().warning("Nieznany materiał '" + typeName + "' w skinie: " + id);
             }
 
-            skins.put(id, new SkinDefinition(id, displayName, itemModel, materials));
+            skins.put(id, new SkinDefinition(id, displayName, itemModel, equipmentAsset, materials));
         }
 
         plugin.getLogger().info("Załadowano " + skins.size() + " definicji skinów.");
     }
 
-    public SkinDefinition getSkin(String id) {
-        return skins.get(id);
-    }
-
-    public Map<String, SkinDefinition> getAllSkins() {
-        return skins;
-    }
+    public SkinDefinition getSkin(String id) { return skins.get(id); }
+    public Map<String, SkinDefinition> getAllSkins() { return skins; }
 
     public String getChangeTokenName() {
         return plugin.getConfig().getString("change-token.display-name", "&6✦ Token Zmiany");
