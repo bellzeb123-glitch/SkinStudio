@@ -1,0 +1,540 @@
+# ============================================================
+#  SkinStudio - Konfiguracja
+# ============================================================
+
+# Nazwa przedmiotu Token Zmiany (gracz musi go mieć w GUI)
+change-token:
+  display-name: "&6✦ Token Zmiany"
+  material: NETHER_STAR
+  lore:
+    - "&7Wymagany do nałożenia"
+    - "&7lub zdjęcia skina."
+
+# Materiał na którym bazuje Token Skina
+skin-token-material: PAPER
+
+# ============================================================
+#  Definicje skinów
+#  item-model    - dokładna ścieżka modelu z resource packu
+#  display-name  - nazwa wyświetlana tokenu
+#  item-types    - lista materiałów MC na które skin może być nałożony
+# ============================================================
+skins:
+
+  # ── BRONZE ──────────────────────────────────────────────
+  bronze_sword:
+    display-name: "&8[&6Brąz&8] &fToken Skina: Miecz"
+    item-model: "elitemobs:gear/bronze_sword"
+    item-types:
+      - DIAMOND_SWORD
+      - IRON_SWORD
+      - GOLDEN_SWORD
+      - STONE_SWORD
+      - WOODEN_SWORD
+      - NETHERITE_SWORD
+
+  bronze_axe:
+    display-name: "&8[&6Brąz&8] &fToken Skina: Topór"
+    item-model: "elitemobs:gear/bronze_axe"
+    item-types:
+      - DIAMOND_AXE
+      - IRON_AXE
+      - GOLDEN_AXE
+      - STONE_AXE
+      - WOODEN_AXE
+      - NETHERITE_AXE
+
+  bronze_bow:
+    display-name: "&8[&6Brąz&8] &fToken Skina: Łuk"
+    item-model: "elitemobs:gear/bronze_bow"
+    item-types:
+      - BOW
+
+  bronze_crossbow:
+    display-name: "&8[&6Brąz&8] &fToken Skina: Kusza"
+    item-model: "elitemobs:gear/bronze_crossbow"
+    item-types:
+      - CROSSBOW
+
+  bronze_scythe:
+    display-name: "&8[&6Brąz&8] &fToken Skina: Kosa"
+    item-model: "elitemobs:gear/bronze_scythe"
+    item-types:
+      - DIAMOND_HOE
+      - IRON_HOE
+      - GOLDEN_HOE
+      - STONE_HOE
+      - WOODEN_HOE
+      - NETHERITE_HOE
+
+  bronze_trident:
+    display-name: "&8[&6Brąz&8] &fToken Skina: Trójząb"
+    item-model: "elitemobs:gear/bronze_trident"
+    item-types:
+      - TRIDENT
+
+  bronze_helmet:
+    display-name: "&8[&6Brąz&8] &fToken Skina: Hełm"
+    item-model: "elitemobs:gear/bronze_helmet"
+    item-types:
+      - DIAMOND_HELMET
+      - IRON_HELMET
+      - GOLDEN_HELMET
+      - LEATHER_HELMET
+      - NETHERITE_HELMET
+      - CHAINMAIL_HELMET
+
+  bronze_chestplate:
+    display-name: "&8[&6Brąz&8] &fToken Skina: Napierśnik"
+    item-model: "elitemobs:gear/bronze_chestplate"
+    item-types:
+      - DIAMOND_CHESTPLATE
+      - IRON_CHESTPLATE
+      - GOLDEN_CHESTPLATE
+      - LEATHER_CHESTPLATE
+      - NETHERITE_CHESTPLATE
+      - CHAINMAIL_CHESTPLATE
+
+  bronze_leggings:
+    display-name: "&8[&6Brąz&8] &fToken Skina: Spodnie"
+    item-model: "elitemobs:gear/bronze_leggings"
+    item-types:
+      - DIAMOND_LEGGINGS
+      - IRON_LEGGINGS
+      - GOLDEN_LEGGINGS
+      - LEATHER_LEGGINGS
+      - NETHERITE_LEGGINGS
+      - CHAINMAIL_LEGGINGS
+
+  bronze_boots:
+    display-name: "&8[&6Brąz&8] &fToken Skina: Buty"
+    item-model: "elitemobs:gear/bronze_boots"
+    item-types:
+      - DIAMOND_BOOTS
+      - IRON_BOOTS
+      - GOLDEN_BOOTS
+      - LEATHER_BOOTS
+      - NETHERITE_BOOTS
+      - CHAINMAIL_BOOTS
+
+  # ── LIVING ──────────────────────────────────────────────
+  living_sword:
+    display-name: "&8[&aŻyjący&8] &fToken Skina: Miecz"
+    item-model: "elitemobs:gear/living_sword"
+    item-types:
+      - DIAMOND_SWORD
+      - IRON_SWORD
+      - GOLDEN_SWORD
+      - STONE_SWORD
+      - WOODEN_SWORD
+      - NETHERITE_SWORD
+
+  living_axe:
+    display-name: "&8[&aŻyjący&8] &fToken Skina: Topór"
+    item-model: "elitemobs:gear/living_axe"
+    item-types:
+      - DIAMOND_AXE
+      - IRON_AXE
+      - GOLDEN_AXE
+      - STONE_AXE
+      - WOODEN_AXE
+      - NETHERITE_AXE
+
+  living_bow:
+    display-name: "&8[&aŻyjący&8] &fToken Skina: Łuk"
+    item-model: "elitemobs:gear/living_bow"
+    item-types:
+      - BOW
+
+  living_crossbow:
+    display-name: "&8[&aŻyjący&8] &fToken Skina: Kusza"
+    item-model: "elitemobs:gear/living_crossbow"
+    item-types:
+      - CROSSBOW
+
+  living_scythe:
+    display-name: "&8[&aŻyjący&8] &fToken Skina: Kosa"
+    item-model: "elitemobs:gear/living_scythe"
+    item-types:
+      - DIAMOND_HOE
+      - IRON_HOE
+      - GOLDEN_HOE
+      - STONE_HOE
+      - WOODEN_HOE
+      - NETHERITE_HOE
+
+  living_trident:
+    display-name: "&8[&aŻyjący&8] &fToken Skina: Trójząb"
+    item-model: "elitemobs:gear/living_trident"
+    item-types:
+      - TRIDENT
+
+  living_helmet:
+    display-name: "&8[&aŻyjący&8] &fToken Skina: Hełm"
+    item-model: "elitemobs:gear/living_helmet"
+    item-types:
+      - DIAMOND_HELMET
+      - IRON_HELMET
+      - GOLDEN_HELMET
+      - LEATHER_HELMET
+      - NETHERITE_HELMET
+      - CHAINMAIL_HELMET
+
+  living_chestplate:
+    display-name: "&8[&aŻyjący&8] &fToken Skina: Napierśnik"
+    item-model: "elitemobs:gear/living_chestplate"
+    item-types:
+      - DIAMOND_CHESTPLATE
+      - IRON_CHESTPLATE
+      - GOLDEN_CHESTPLATE
+      - LEATHER_CHESTPLATE
+      - NETHERITE_CHESTPLATE
+      - CHAINMAIL_CHESTPLATE
+
+  living_leggings:
+    display-name: "&8[&aŻyjący&8] &fToken Skina: Spodnie"
+    item-model: "elitemobs:gear/living_leggings"
+    item-types:
+      - DIAMOND_LEGGINGS
+      - IRON_LEGGINGS
+      - GOLDEN_LEGGINGS
+      - LEATHER_LEGGINGS
+      - NETHERITE_LEGGINGS
+      - CHAINMAIL_LEGGINGS
+
+  living_boots:
+    display-name: "&8[&aŻyjący&8] &fToken Skina: Buty"
+    item-model: "elitemobs:gear/living_boots"
+    item-types:
+      - DIAMOND_BOOTS
+      - IRON_BOOTS
+      - GOLDEN_BOOTS
+      - LEATHER_BOOTS
+      - NETHERITE_BOOTS
+      - CHAINMAIL_BOOTS
+
+  # ── CORRUPTED ────────────────────────────────────────────
+  corrupted_sword:
+    display-name: "&8[&5Skażony&8] &fToken Skina: Miecz"
+    item-model: "elitemobs:gear/corrupted_sword"
+    item-types:
+      - DIAMOND_SWORD
+      - IRON_SWORD
+      - GOLDEN_SWORD
+      - STONE_SWORD
+      - WOODEN_SWORD
+      - NETHERITE_SWORD
+
+  corrupted_axe:
+    display-name: "&8[&5Skażony&8] &fToken Skina: Topór"
+    item-model: "elitemobs:gear/corrupted_axe"
+    item-types:
+      - DIAMOND_AXE
+      - IRON_AXE
+      - GOLDEN_AXE
+      - STONE_AXE
+      - WOODEN_AXE
+      - NETHERITE_AXE
+
+  corrupted_bow:
+    display-name: "&8[&5Skażony&8] &fToken Skina: Łuk"
+    item-model: "elitemobs:gear/corrupted_bow"
+    item-types:
+      - BOW
+
+  corrupted_crossbow:
+    display-name: "&8[&5Skażony&8] &fToken Skina: Kusza"
+    item-model: "elitemobs:gear/corrupted_crossbow"
+    item-types:
+      - CROSSBOW
+
+  corrupted_scythe:
+    display-name: "&8[&5Skażony&8] &fToken Skina: Kosa"
+    item-model: "elitemobs:gear/corrupted_scythe"
+    item-types:
+      - DIAMOND_HOE
+      - IRON_HOE
+      - GOLDEN_HOE
+      - STONE_HOE
+      - WOODEN_HOE
+      - NETHERITE_HOE
+
+  corrupted_trident:
+    display-name: "&8[&5Skażony&8] &fToken Skina: Trójząb"
+    item-model: "elitemobs:gear/corrupted_trident"
+    item-types:
+      - TRIDENT
+
+  corrupted_helmet:
+    display-name: "&8[&5Skażony&8] &fToken Skina: Hełm"
+    item-model: "elitemobs:gear/corrupted_helmet"
+    item-types:
+      - DIAMOND_HELMET
+      - IRON_HELMET
+      - GOLDEN_HELMET
+      - LEATHER_HELMET
+      - NETHERITE_HELMET
+      - CHAINMAIL_HELMET
+
+  corrupted_chestplate:
+    display-name: "&8[&5Skażony&8] &fToken Skina: Napierśnik"
+    item-model: "elitemobs:gear/corrupted_chestplate"
+    item-types:
+      - DIAMOND_CHESTPLATE
+      - IRON_CHESTPLATE
+      - GOLDEN_CHESTPLATE
+      - LEATHER_CHESTPLATE
+      - NETHERITE_CHESTPLATE
+      - CHAINMAIL_CHESTPLATE
+
+  corrupted_leggings:
+    display-name: "&8[&5Skażony&8] &fToken Skina: Spodnie"
+    item-model: "elitemobs:gear/corrupted_leggings"
+    item-types:
+      - DIAMOND_LEGGINGS
+      - IRON_LEGGINGS
+      - GOLDEN_LEGGINGS
+      - LEATHER_LEGGINGS
+      - NETHERITE_LEGGINGS
+      - CHAINMAIL_LEGGINGS
+
+  corrupted_boots:
+    display-name: "&8[&5Skażony&8] &fToken Skina: Buty"
+    item-model: "elitemobs:gear/corrupted_boots"
+    item-types:
+      - DIAMOND_BOOTS
+      - IRON_BOOTS
+      - GOLDEN_BOOTS
+      - LEATHER_BOOTS
+      - NETHERITE_BOOTS
+      - CHAINMAIL_BOOTS
+
+  # ── PALLADIUM ────────────────────────────────────────────
+  palladium_sword:
+    display-name: "&8[&bPalladium&8] &fToken Skina: Miecz"
+    item-model: "elitemobs:gear/palladium_sword"
+    item-types:
+      - DIAMOND_SWORD
+      - IRON_SWORD
+      - GOLDEN_SWORD
+      - STONE_SWORD
+      - WOODEN_SWORD
+      - NETHERITE_SWORD
+
+  palladium_axe:
+    display-name: "&8[&bPalladium&8] &fToken Skina: Topór"
+    item-model: "elitemobs:gear/palladium_axe"
+    item-types:
+      - DIAMOND_AXE
+      - IRON_AXE
+      - GOLDEN_AXE
+      - STONE_AXE
+      - WOODEN_AXE
+      - NETHERITE_AXE
+
+  palladium_bow:
+    display-name: "&8[&bPalladium&8] &fToken Skina: Łuk"
+    item-model: "elitemobs:gear/palladium_bow"
+    item-types:
+      - BOW
+
+  palladium_crossbow:
+    display-name: "&8[&bPalladium&8] &fToken Skina: Kusza"
+    item-model: "elitemobs:gear/palladium_crossbow"
+    item-types:
+      - CROSSBOW
+
+  palladium_scythe:
+    display-name: "&8[&bPalladium&8] &fToken Skina: Kosa"
+    item-model: "elitemobs:gear/palladium_scythe"
+    item-types:
+      - DIAMOND_HOE
+      - IRON_HOE
+      - GOLDEN_HOE
+      - STONE_HOE
+      - WOODEN_HOE
+      - NETHERITE_HOE
+
+  palladium_trident:
+    display-name: "&8[&bPalladium&8] &fToken Skina: Trójząb"
+    item-model: "elitemobs:gear/palladium_trident"
+    item-types:
+      - TRIDENT
+
+  palladium_helmet:
+    display-name: "&8[&bPalladium&8] &fToken Skina: Hełm"
+    item-model: "elitemobs:gear/palladium_helmet"
+    item-types:
+      - DIAMOND_HELMET
+      - IRON_HELMET
+      - GOLDEN_HELMET
+      - LEATHER_HELMET
+      - NETHERITE_HELMET
+      - CHAINMAIL_HELMET
+
+  palladium_chestplate:
+    display-name: "&8[&bPalladium&8] &fToken Skina: Napierśnik"
+    item-model: "elitemobs:gear/palladium_chestplate"
+    item-types:
+      - DIAMOND_CHESTPLATE
+      - IRON_CHESTPLATE
+      - GOLDEN_CHESTPLATE
+      - LEATHER_CHESTPLATE
+      - NETHERITE_CHESTPLATE
+      - CHAINMAIL_CHESTPLATE
+
+  palladium_leggings:
+    display-name: "&8[&bPalladium&8] &fToken Skina: Spodnie"
+    item-model: "elitemobs:gear/palladium_leggings"
+    item-types:
+      - DIAMOND_LEGGINGS
+      - IRON_LEGGINGS
+      - GOLDEN_LEGGINGS
+      - LEATHER_LEGGINGS
+      - NETHERITE_LEGGINGS
+      - CHAINMAIL_LEGGINGS
+
+  palladium_boots:
+    display-name: "&8[&bPalladium&8] &fToken Skina: Buty"
+    item-model: "elitemobs:gear/palladium_boots"
+    item-types:
+      - DIAMOND_BOOTS
+      - IRON_BOOTS
+      - GOLDEN_BOOTS
+      - LEATHER_BOOTS
+      - NETHERITE_BOOTS
+      - CHAINMAIL_BOOTS
+
+  # ── ULTIMATIUM ───────────────────────────────────────────
+  ultimatium_sword:
+    display-name: "&8[&eUltimatium&8] &fToken Skina: Miecz"
+    item-model: "elitemobs:gear/ultimatium_sword"
+    item-types:
+      - DIAMOND_SWORD
+      - IRON_SWORD
+      - GOLDEN_SWORD
+      - STONE_SWORD
+      - WOODEN_SWORD
+      - NETHERITE_SWORD
+
+  ultimatium_axe:
+    display-name: "&8[&eUltimatium&8] &fToken Skina: Topór"
+    item-model: "elitemobs:gear/ultimatium_axe"
+    item-types:
+      - DIAMOND_AXE
+      - IRON_AXE
+      - GOLDEN_AXE
+      - STONE_AXE
+      - WOODEN_AXE
+      - NETHERITE_AXE
+
+  ultimatium_bow:
+    display-name: "&8[&eUltimatium&8] &fToken Skina: Łuk"
+    item-model: "elitemobs:gear/ultimatium_bow"
+    item-types:
+      - BOW
+
+  ultimatium_crossbow:
+    display-name: "&8[&eUltimatium&8] &fToken Skina: Kusza"
+    item-model: "elitemobs:gear/ultimatium_crossbow"
+    item-types:
+      - CROSSBOW
+
+  ultimatium_scythe:
+    display-name: "&8[&eUltimatium&8] &fToken Skina: Kosa"
+    item-model: "elitemobs:gear/ultimatium_scythe"
+    item-types:
+      - DIAMOND_HOE
+      - IRON_HOE
+      - GOLDEN_HOE
+      - STONE_HOE
+      - WOODEN_HOE
+      - NETHERITE_HOE
+
+  ultimatium_trident:
+    display-name: "&8[&eUltimatium&8] &fToken Skina: Trójząb"
+    item-model: "elitemobs:gear/ultimatium_trident"
+    item-types:
+      - TRIDENT
+
+  ultimatium_helmet:
+    display-name: "&8[&eUltimatium&8] &fToken Skina: Hełm"
+    item-model: "elitemobs:gear/ultimatium_helmet"
+    item-types:
+      - DIAMOND_HELMET
+      - IRON_HELMET
+      - GOLDEN_HELMET
+      - LEATHER_HELMET
+      - NETHERITE_HELMET
+      - CHAINMAIL_HELMET
+
+  ultimatium_chestplate:
+    display-name: "&8[&eUltimatium&8] &fToken Skina: Napierśnik"
+    item-model: "elitemobs:gear/ultimatium_chestplate"
+    item-types:
+      - DIAMOND_CHESTPLATE
+      - IRON_CHESTPLATE
+      - GOLDEN_CHESTPLATE
+      - LEATHER_CHESTPLATE
+      - NETHERITE_CHESTPLATE
+      - CHAINMAIL_CHESTPLATE
+
+  ultimatium_leggings:
+    display-name: "&8[&eUltimatium&8] &fToken Skina: Spodnie"
+    item-model: "elitemobs:gear/ultimatium_leggings"
+    item-types:
+      - DIAMOND_LEGGINGS
+      - IRON_LEGGINGS
+      - GOLDEN_LEGGINGS
+      - LEATHER_LEGGINGS
+      - NETHERITE_LEGGINGS
+      - CHAINMAIL_LEGGINGS
+
+  ultimatium_boots:
+    display-name: "&8[&eUltimatium&8] &fToken Skina: Buty"
+    item-model: "elitemobs:gear/ultimatium_boots"
+    item-types:
+      - DIAMOND_BOOTS
+      - IRON_BOOTS
+      - GOLDEN_BOOTS
+      - LEATHER_BOOTS
+      - NETHERITE_BOOTS
+      - CHAINMAIL_BOOTS
+
+  # ── UNIKALNE ─────────────────────────────────────────────
+  frost_palace_fire_sword:
+    display-name: "&8[&cFrost Palace&8] &fToken Skina: Ognisty Miecz"
+    item-model: "elitemobs:gear/frost_palace_fire_sword"
+    item-types:
+      - DIAMOND_SWORD
+      - IRON_SWORD
+      - GOLDEN_SWORD
+      - NETHERITE_SWORD
+
+  frost_palace_ice_sword:
+    display-name: "&8[&bFrost Palace&8] &fToken Skina: Lodowy Miecz"
+    item-model: "elitemobs:gear/frost_palace_ice_sword"
+    item-types:
+      - DIAMOND_SWORD
+      - IRON_SWORD
+      - GOLDEN_SWORD
+      - NETHERITE_SWORD
+
+  primis_gladius_sword:
+    display-name: "&8[&dPrimis&8] &fToken Skina: Gladius"
+    item-model: "elitemobs:gear/primis_gladius_sword"
+    item-types:
+      - DIAMOND_SWORD
+      - IRON_SWORD
+      - GOLDEN_SWORD
+      - NETHERITE_SWORD
+
+  magmaguys_toothpick:
+    display-name: "&8[&6MagmaGuy&8] &fToken Skina: Wykałaczka"
+    item-model: "elitemobs:gear/magmaguys_toothpick"
+    item-types:
+      - DIAMOND_SWORD
+      - IRON_SWORD
+      - GOLDEN_SWORD
+      - NETHERITE_SWORD
+      - STICK

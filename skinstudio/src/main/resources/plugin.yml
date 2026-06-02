@@ -1,0 +1,23 @@
+name: SkinStudio
+version: 1.0.0
+main: pl.skinstudio.SkinStudio
+api-version: "26"
+description: Plugin do nakładania skinów na przedmioty
+
+commands:
+  skinstudio:
+    description: Otwiera GUI Skin Studio
+    usage: /skinstudio
+    permission: skinstudio.use
+  skintoken:
+    description: Komendy administracyjne tokenów
+    usage: /skintoken <give|giveremove|list|reload>
+    permission: skinstudio.admin
+
+permissions:
+  skinstudio.use:
+    description: Pozwala używać /skinstudio
+    default: true
+  skinstudio.admin:
+    description: Pozwala używać komend admina
+    default: op
