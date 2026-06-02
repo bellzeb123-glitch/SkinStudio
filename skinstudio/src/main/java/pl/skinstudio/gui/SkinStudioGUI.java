@@ -9,7 +9,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -24,14 +23,31 @@ import java.util.*;
 
 public class SkinStudioGUI implements Listener {
 
+    /*
+     * Układ GUI (3 rzędy = 27 slotów):
+     *
+     *  [0][1][2][3][4][5][6][7][8]   <- rząd 1
+     *  [9][A][B][C][D][E][F][G][H]   <- rząd 2
+     *  [I][J][K][L][M][N][O][P][Q]   <- rząd 3
+     *
+     *  Slot 9  = opis "Token Zmiany"   (zablokowany, tylko do czytania)
+     *  Slot 10 = PUSTY slot roboczy    (tu gracz wkłada Token Zmiany)
+     *  Slot 12 = opis "Przedmiot"      (zablokowany)
+     *  Slot 13 = PUSTY slot roboczy    (tu gracz wkłada broń/zbroję)
+     *  Slot 15 = opis "Token Skina"    (zablokowany)
+     *  Slot 16 = PUSTY slot roboczy    (tu gracz wkłada Token Skina)
+     *  Slot 22 = przycisk Zastosuj
+     *  Reszta  = szare szkło (zablokowane)
+     */
+
+    private static final int SLOT_CHANGE_LABEL = 9;
     private static final int SLOT_CHANGE_TOKEN = 10;
+    private static final int SLOT_ITEM_LABEL   = 12;
     private static final int SLOT_ITEM         = 13;
+    private static final int SLOT_SKIN_LABEL   = 15;
     private static final int SLOT_SKIN_TOKEN   = 16;
     private static final int SLOT_APPLY        = 22;
-    private static final int SLOT_REMOVE_INFO  = 20;
-    private static final int SLOT_INFO         = 24;
 
-    // Sloty robocze — tylko tu gracz może wkładać/wyjmować przedmioty
     private static final Set<Integer> WORKING_SLOTS = Set.of(SLOT_CHANGE_TOKEN, SLOT_ITEM, SLOT_SKIN_TOKEN);
 
     private final SkinStudio plugin;
@@ -44,35 +60,42 @@ public class SkinStudioGUI implements Listener {
 
     public void openFor(Player player) {
         Inventory inv = Bukkit.createInventory(null, 27, colorize("&8✦ &6Skin Studio &8✦"));
-        fillDecoration(inv);
+        buildGui(inv);
         openGuis.put(player.getUniqueId(), inv);
         player.openInventory(inv);
     }
 
-    private void fillDecoration(Inventory inv) {
+    private void buildGui(Inventory inv) {
+        // Tło — szare szkło wszędzie
         ItemStack glass = makeItem(Material.GRAY_STAINED_GLASS_PANE, " ", List.of());
         for (int i = 0; i < 27; i++) inv.setItem(i, glass);
 
-        inv.setItem(SLOT_CHANGE_TOKEN, makeItem(Material.LIME_STAINED_GLASS_PANE,
-            "&a▶ Slot: Token Zmiany", List.of("&7Wrzuć tutaj", "&6Token Zmiany")));
+        // Sloty robocze — puste (null)
+        inv.setItem(SLOT_CHANGE_TOKEN, null);
+        inv.setItem(SLOT_ITEM, null);
+        inv.setItem(SLOT_SKIN_TOKEN, null);
 
-        inv.setItem(SLOT_ITEM, makeItem(Material.BLUE_STAINED_GLASS_PANE,
-            "&b▶ Slot: Przedmiot", List.of("&7Wrzuć tutaj broń", "&7lub zbroję")));
+        // Etykiety obok slotów roboczych
+        inv.setItem(SLOT_CHANGE_LABEL, makeItem(Material.LIME_STAINED_GLASS_PANE,
+            "&a▼ Token Zmiany",
+            List.of("&7Wrzuć tutaj Token Zmiany.", "&7Wymagany zawsze.")));
 
-        inv.setItem(SLOT_SKIN_TOKEN, makeItem(Material.PURPLE_STAINED_GLASS_PANE,
-            "&d▶ Slot: Token Skina", List.of("&7Wrzuć tutaj Token Skina", "&7(zostaw pusty aby zdjąć skin)")));
+        inv.setItem(SLOT_ITEM_LABEL, makeItem(Material.BLUE_STAINED_GLASS_PANE,
+            "&b▼ Przedmiot",
+            List.of("&7Wrzuć tutaj broń", "&7lub zbroję.")));
 
+        inv.setItem(SLOT_SKIN_LABEL, makeItem(Material.PURPLE_STAINED_GLASS_PANE,
+            "&d▼ Token Skina",
+            List.of("&7Wrzuć Token Skina.", "&7Zostaw puste aby", "&7zdjąć skin.")));
+
+        // Przycisk Zastosuj
         inv.setItem(SLOT_APPLY, makeItem(Material.EMERALD,
-            "&a✔ Zastosuj", List.of("&7Kliknij aby nałożyć skin", "&7lub zdjąć skin z przedmiotu")));
-
-        inv.setItem(SLOT_REMOVE_INFO, makeItem(Material.REDSTONE,
-            "&c✘ Zdejmij Skin", List.of("&7Token Zmiany + Przedmiot", "&7(bez Tokenu Skina)")));
-
-        inv.setItem(SLOT_INFO, makeItem(Material.BOOK,
-            "&eℹ Informacja", List.of(
-                "&7Token Zmiany zawsze wymagany.",
-                "&7Bez Tokenu Skina — skin zostanie zdjęty.",
-                "&eKażdy slot przyjmuje tylko 1 sztukę."
+            "&a✔ Zastosuj",
+            List.of(
+                "&7Nakłada lub zdejmuje skin.",
+                "",
+                "&eBez Tokenu Skina &7— zdejmuje skin.",
+                "&eBez Tokenu Zmiany &7— nic nie zrobi."
             )));
     }
 
@@ -82,37 +105,34 @@ public class SkinStudioGUI implements Listener {
         Inventory inv = openGuis.get(player.getUniqueId());
         if (inv == null || !event.getInventory().equals(inv)) return;
 
-        int rawSlot = event.getRawSlot();
-        boolean isGuiSlot    = rawSlot >= 0 && rawSlot < 27;
-        boolean isWorkingSlot = WORKING_SLOTS.contains(rawSlot);
-        boolean isPlayerSlot  = rawSlot >= 27;
+        int raw = event.getRawSlot();
+        boolean isGuiSlot    = raw >= 0 && raw < 27;
+        boolean isWorkSlot   = WORKING_SLOTS.contains(raw);
 
-        // Przycisk Zastosuj
-        if (rawSlot == SLOT_APPLY) {
+        // Kliknięcie przycisku Zastosuj
+        if (raw == SLOT_APPLY) {
             event.setCancelled(true);
             handleApply(player, inv);
             return;
         }
 
-        // Kliknięcie w dekorację GUI (nie w sloty robocze) — zawsze blokuj
-        if (isGuiSlot && !isWorkingSlot) {
+        // Zablokuj wszystko poza slotami roboczymi w GUI
+        if (isGuiSlot && !isWorkSlot) {
             event.setCancelled(true);
             return;
         }
 
-        // Shift+click z ekwipunku gracza — sprawdź czy item trafi do slotu roboczego
-        if (isPlayerSlot && event.getClick() == ClickType.SHIFT_LEFT || 
-            isPlayerSlot && event.getClick() == ClickType.SHIFT_RIGHT) {
-            // Blokuj shift+click z ekwipunku — gracze muszą ręcznie wkładać
-            event.setCancelled(true);
-            return;
+        // Shift+click z ekwipunku gracza — blokuj (gracz musi ręcznie wkładać)
+        if (!isGuiSlot) {
+            if (event.isShiftClick()) {
+                event.setCancelled(true);
+                return;
+            }
         }
 
-        // Slot roboczy — obsługa wkładania/wyjmowania
-        if (isWorkingSlot) {
-            // Pozwól na kliknięcie ale po zdarzeniu ogranicz do 1 sztuki
-            Bukkit.getScheduler().runTask(plugin, () -> enforceMaxOne(player, inv, rawSlot));
-            return;
+        // Slot roboczy — pozwól, ale po zdarzeniu sprawdź ilość
+        if (isWorkSlot) {
+            Bukkit.getScheduler().runTask(plugin, () -> enforceMaxOne(player, inv, raw));
         }
     }
 
@@ -122,7 +142,7 @@ public class SkinStudioGUI implements Listener {
         Inventory inv = openGuis.get(player.getUniqueId());
         if (inv == null || !event.getInventory().equals(inv)) return;
 
-        // Zablokuj przeciąganie do slotów GUI (poza roboczymi)
+        // Zablokuj przeciąganie na sloty GUI które nie są roboczymi
         for (int slot : event.getRawSlots()) {
             if (slot < 27 && !WORKING_SLOTS.contains(slot)) {
                 event.setCancelled(true);
@@ -139,20 +159,11 @@ public class SkinStudioGUI implements Listener {
         returnItems(player, inv);
     }
 
-    /**
-     * Wymusza max 1 sztukę w slocie roboczym.
-     * Nadmiar oddaje graczowi.
-     */
+    // ── Logika slotów ────────────────────────────────────────
+
     private void enforceMaxOne(Player player, Inventory inv, int slot) {
         ItemStack current = inv.getItem(slot);
         if (current == null || current.getType() == Material.AIR) return;
-        if (isDecoration(current)) {
-            // Dekoracja wpadła do slotu roboczego — usuń i oddaj graczowi
-            inv.setItem(slot, null);
-            returnToPlayer(player, current);
-            restoreSlotDecoration(inv, slot);
-            return;
-        }
         if (current.getAmount() > 1) {
             ItemStack excess = current.clone();
             excess.setAmount(current.getAmount() - 1);
@@ -162,35 +173,30 @@ public class SkinStudioGUI implements Listener {
         }
     }
 
-    private void restoreSlotDecoration(Inventory inv, int slot) {
-        switch (slot) {
-            case SLOT_CHANGE_TOKEN -> inv.setItem(slot, makeItem(Material.LIME_STAINED_GLASS_PANE,
-                "&a▶ Slot: Token Zmiany", List.of("&7Wrzuć tutaj", "&6Token Zmiany")));
-            case SLOT_ITEM -> inv.setItem(slot, makeItem(Material.BLUE_STAINED_GLASS_PANE,
-                "&b▶ Slot: Przedmiot", List.of("&7Wrzuć tutaj broń", "&7lub zbroję")));
-            case SLOT_SKIN_TOKEN -> inv.setItem(slot, makeItem(Material.PURPLE_STAINED_GLASS_PANE,
-                "&d▶ Slot: Token Skina", List.of("&7Wrzuć tutaj Token Skina", "&7(zostaw pusty aby zdjąć skin)")));
-        }
-    }
+    // ── Logika aplikowania skina ─────────────────────────────
 
     private void handleApply(Player player, Inventory inv) {
-        ItemStack changeToken = getWorkingItem(inv, SLOT_CHANGE_TOKEN);
-        ItemStack targetItem  = getWorkingItem(inv, SLOT_ITEM);
-        ItemStack skinToken   = getWorkingItem(inv, SLOT_SKIN_TOKEN);
+        ItemStack changeToken = inv.getItem(SLOT_CHANGE_TOKEN);
+        ItemStack targetItem  = inv.getItem(SLOT_ITEM);
+        ItemStack skinToken   = inv.getItem(SLOT_SKIN_TOKEN);
 
+        // Walidacja Token Zmiany
         if (!TokenUtil.isChangeToken(changeToken)) {
             msg(player, "&cBrak Tokenu Zmiany w lewym slocie!");
             player.playSound(player, Sound.ENTITY_VILLAGER_NO, 1f, 1f);
             return;
         }
 
-        if (targetItem == null) {
+        // Walidacja przedmiotu
+        if (targetItem == null || targetItem.getType() == Material.AIR) {
             msg(player, "&cBrak przedmiotu w środkowym slocie!");
             player.playSound(player, Sound.ENTITY_VILLAGER_NO, 1f, 1f);
             return;
         }
 
-        if (skinToken == null) {
+        boolean hasSkinToken = skinToken != null && skinToken.getType() != Material.AIR;
+
+        if (!hasSkinToken) {
             handleRemoveSkin(player, inv, targetItem);
         } else {
             if (!TokenUtil.isSkinToken(skinToken)) {
@@ -202,27 +208,30 @@ public class SkinStudioGUI implements Listener {
         }
     }
 
-    private void handleApplySkin(Player player, Inventory inv, ItemStack targetItem, ItemStack skinToken) {
+    private void handleApplySkin(Player player, Inventory inv,
+                                  ItemStack targetItem, ItemStack skinToken) {
         String skinId = TokenUtil.getSkinIdFromToken(skinToken);
         if (skinId == null) { msg(player, "&cNieprawidłowy Token Skina!"); return; }
 
         SkinDefinition skin = plugin.getSkinConfig().getSkin(skinId);
-        if (skin == null) { msg(player, "&cSkin '&e" + skinId + "&c' nie istnieje!"); return; }
+        if (skin == null) {
+            msg(player, "&cSkin '&e" + skinId + "&c' nie istnieje w konfiguracji!");
+            return;
+        }
 
         if (!skin.isCompatibleWith(targetItem.getType())) {
             msg(player, "&cTen skin nie pasuje do tego typu przedmiotu!");
+            msg(player, "&7Wymagany typ: &f" + skin.getAllowedTypes().get(0).name().replace("DIAMOND_", "").replace("IRON_", ""));
             player.playSound(player, Sound.ENTITY_VILLAGER_NO, 1f, 1f);
             return;
         }
 
         ItemStack modified = TokenUtil.applySkin(targetItem, skin);
 
-        // Usuń tokeny, wstaw zmodyfikowany przedmiot, przywróć dekoracje
+        // Usuń tokeny ze slotów
         inv.setItem(SLOT_CHANGE_TOKEN, null);
         inv.setItem(SLOT_SKIN_TOKEN, null);
         inv.setItem(SLOT_ITEM, modified);
-        restoreSlotDecoration(inv, SLOT_CHANGE_TOKEN);
-        restoreSlotDecoration(inv, SLOT_SKIN_TOKEN);
 
         msg(player, "&aSkin &f" + skin.getDisplayName() + " &azostał nałożony!");
         player.playSound(player, Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.5f);
@@ -240,16 +249,17 @@ public class SkinStudioGUI implements Listener {
 
         inv.setItem(SLOT_CHANGE_TOKEN, null);
         inv.setItem(SLOT_ITEM, restored);
-        restoreSlotDecoration(inv, SLOT_CHANGE_TOKEN);
 
         msg(player, "&aSkin został zdjęty z przedmiotu.");
         player.playSound(player, Sound.BLOCK_ANVIL_USE, 1f, 1f);
     }
 
+    // ── Pomocnicze ───────────────────────────────────────────
+
     private void returnItems(Player player, Inventory inv) {
         for (int slot : WORKING_SLOTS) {
             ItemStack item = inv.getItem(slot);
-            if (item != null && !isDecoration(item)) {
+            if (item != null && item.getType() != Material.AIR) {
                 returnToPlayer(player, item);
             }
         }
@@ -261,32 +271,13 @@ public class SkinStudioGUI implements Listener {
         leftover.values().forEach(i -> player.getWorld().dropItemNaturally(player.getLocation(), i));
     }
 
-    /** Zwraca item ze slotu roboczego lub null jeśli slot zawiera dekorację/pusty */
-    private ItemStack getWorkingItem(Inventory inv, int slot) {
-        ItemStack item = inv.getItem(slot);
-        if (item == null || item.getType() == Material.AIR || isDecoration(item)) return null;
-        return item;
-    }
-
-    private boolean isDecoration(ItemStack item) {
-        if (item == null) return true;
-        // Dekoracje to przedmioty bez NBT tokenów
-        if (TokenUtil.isChangeToken(item) || TokenUtil.isSkinToken(item)) return false;
-        return switch (item.getType()) {
-            case GRAY_STAINED_GLASS_PANE, LIME_STAINED_GLASS_PANE,
-                 BLUE_STAINED_GLASS_PANE, PURPLE_STAINED_GLASS_PANE,
-                 EMERALD, REDSTONE, BOOK -> true;
-            default -> false;
-        };
-    }
-
     private ItemStack makeItem(Material mat, String name, List<String> lore) {
         ItemStack item = new ItemStack(mat);
         ItemMeta meta = item.getItemMeta();
         meta.displayName(colorize(name));
-        List<Component> loreComponents = new ArrayList<>();
-        for (String line : lore) loreComponents.add(colorize(line));
-        meta.lore(loreComponents);
+        List<Component> components = new ArrayList<>();
+        for (String line : lore) components.add(colorize(line));
+        meta.lore(components);
         item.setItemMeta(meta);
         return item;
     }
