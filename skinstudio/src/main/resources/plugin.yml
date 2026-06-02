@@ -6,8 +6,8 @@ description: Plugin do nakładania skinów na przedmioty
 
 commands:
   skinstudio:
-    description: Otwiera GUI Skin Studio
-    usage: /skinstudio
+    description: Otwiera GUI Skin Studio (lub panel admina z /skinstudio admin)
+    usage: /skinstudio [admin]
     permission: skinstudio.use
   skintoken:
     description: Komendy administracyjne tokenów
@@ -19,5 +19,5 @@ permissions:
     description: Pozwala używać /skinstudio
     default: true
   skinstudio.admin:
-    description: Pozwala używać komend admina
+    description: Pozwala używać /skinstudio admin i /skintoken
     default: op
