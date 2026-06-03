@@ -109,11 +109,12 @@ public class TokenUtil {
         meta.setItemModel(parseKey(skin.getItemModel()));
 
         // Obsługa equipment texture — dla napierśnika, spodni, butów ORAZ hełmu
-        // W MC 26.1.2 hełm na głowie gracza używa humanoid equipment layer
-        // (tak samo jak reszta zbroi) — nie item_model
+        // W MC 26.1.2 equippable komponent jest wymagany aby custom model
+        // był widoczny na założonej zbroi/hełmie
         if (skin.hasEquipmentAsset()) {
             EquipmentSlot eqSlot = getEquipmentSlot(item.getType());
             if (eqSlot != null) {
+                // Zapisz stan oryginalnego equippable (tylko raz)
                 if (!pdc.has(hadEquipKey, PersistentDataType.BYTE)) {
                     pdc.set(hadEquipKey, PersistentDataType.BYTE,
                         meta.hasEquippable() ? (byte)1 : (byte)0);
@@ -127,26 +128,26 @@ public class TokenUtil {
                     pdc.set(origEquipKey, PersistentDataType.STRING, origEquip);
                 }
 
-                EquippableComponent eq;
-                if (meta.hasEquippable()) {
-                    eq = meta.getEquippable();
-                    eq.setModel(parseKey(skin.getEquipmentAsset()));
-                    meta.setEquippable(eq);
-                } else {
-                    // Dla itemów bez equippable — użyj template z właściwym materiałem
-                    // Template item tego samego materiału ma equippable z właściwym slotem
-                    ItemStack template = new ItemStack(item.getType());
-                    ItemMeta templateMeta = template.getItemMeta();
-                    if (templateMeta != null && templateMeta.hasEquippable()) {
-                        EquippableComponent templateEq = templateMeta.getEquippable();
-                        templateEq.setModel(parseKey(skin.getEquipmentAsset()));
-                        meta.setEquippable(templateEq);
-                    } else {
-                        // Ostateczny fallback
-                        plugin.getLogger().warning("[SkinStudio] Cannot get equippable for: " 
-                            + item.getType() + " — helmet skin may not show on head");
-                    }
+                // Pobierz lub utwórz equippable komponent
+                EquippableComponent eq = meta.getEquippable();
+                // Zawsze ustaw slot ręcznie — w MC 26.1.2 getEquippable()
+                // może zwrócić pusty komponent bez slotu
+                eq.setSlot(eqSlot);
+                eq.setModel(parseKey(skin.getEquipmentAsset()));
+                meta.setEquippable(eq);
+            }
+        } else {
+            // Brak equipment-asset w configu (broń lub hełm bez tekstury)
+            // Dla hełmów: upewnij się że equippable z HEAD slotem jest ustawiony
+            // żeby item mógł być założony na głowę
+            EquipmentSlot eqSlot = getEquipmentSlot(item.getType());
+            if (eqSlot == EquipmentSlot.HEAD && !meta.hasEquippable()) {
+                if (!pdc.has(hadEquipKey, PersistentDataType.BYTE)) {
+                    pdc.set(hadEquipKey, PersistentDataType.BYTE, (byte)0);
                 }
+                EquippableComponent eq = meta.getEquippable();
+                eq.setSlot(EquipmentSlot.HEAD);
+                meta.setEquippable(eq);
             }
         }
 
