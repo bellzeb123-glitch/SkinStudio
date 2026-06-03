@@ -108,13 +108,12 @@ public class TokenUtil {
         // Ustaw nowy item_model
         meta.setItemModel(parseKey(skin.getItemModel()));
 
-        // Obsługa equipment texture — TYLKO dla napierśnika, spodni, butów
-        // Hełm (HEAD slot) używa item_model jako 3D model, NIE equipment texture
-        // Dlatego dla hełmów equipment-asset jest "" i ta sekcja się nie wykona
+        // Obsługa equipment texture — dla napierśnika, spodni, butów ORAZ hełmu
+        // W MC 26.1.2 hełm na głowie gracza używa humanoid equipment layer
+        // (tak samo jak reszta zbroi) — nie item_model
         if (skin.hasEquipmentAsset()) {
             EquipmentSlot eqSlot = getEquipmentSlot(item.getType());
-            // Pomijamy HEAD — hełm renderuje się przez item_model, nie equipment texture
-            if (eqSlot != null && eqSlot != EquipmentSlot.HEAD) {
+            if (eqSlot != null) {
                 if (!pdc.has(hadEquipKey, PersistentDataType.BYTE)) {
                     pdc.set(hadEquipKey, PersistentDataType.BYTE,
                         meta.hasEquippable() ? (byte)1 : (byte)0);
@@ -131,19 +130,23 @@ public class TokenUtil {
                 EquippableComponent eq;
                 if (meta.hasEquippable()) {
                     eq = meta.getEquippable();
+                    eq.setModel(parseKey(skin.getEquipmentAsset()));
+                    meta.setEquippable(eq);
                 } else {
-                    // Utwórz wzorcowy item żeby dostać equippable z właściwym slotem
+                    // Dla itemów bez equippable — użyj template z właściwym materiałem
+                    // Template item tego samego materiału ma equippable z właściwym slotem
                     ItemStack template = new ItemStack(item.getType());
                     ItemMeta templateMeta = template.getItemMeta();
-                    if (templateMeta.hasEquippable()) {
-                        eq = templateMeta.getEquippable();
+                    if (templateMeta != null && templateMeta.hasEquippable()) {
+                        EquippableComponent templateEq = templateMeta.getEquippable();
+                        templateEq.setModel(parseKey(skin.getEquipmentAsset()));
+                        meta.setEquippable(templateEq);
                     } else {
-                        eq = meta.getEquippable();
-                        eq.setSlot(eqSlot);
+                        // Ostateczny fallback
+                        plugin.getLogger().warning("[SkinStudio] Cannot get equippable for: " 
+                            + item.getType() + " — helmet skin may not show on head");
                     }
                 }
-                eq.setModel(parseKey(skin.getEquipmentAsset()));
-                meta.setEquippable(eq);
             }
         }
 
@@ -175,21 +178,17 @@ public class TokenUtil {
         // Przywróć item_model
         meta.setItemModel(origModel != null && !origModel.isEmpty() ? parseKey(origModel) : null);
 
-        // Przywróć equippable — tylko dla nie-hełmów
-        // Hełmy nie mają equipment texture więc nie ruszamy equippable
+        // Przywróć equippable dla wszystkich typów zbroi włącznie z hełmem
         EquipmentSlot slot = getEquipmentSlot(item.getType());
-        if (slot != EquipmentSlot.HEAD) {
+        if (slot != null) {
             if (hadEquip == 0) {
-                // Nie miał equippable — usuń
                 if (meta.hasEquippable()) meta.setEquippable(null);
             } else if (meta.hasEquippable()) {
-                // Miał equippable — przywróć oryginalny model
                 EquippableComponent eq = meta.getEquippable();
                 eq.setModel(origEquip.isEmpty() ? null : parseKey(origEquip));
                 meta.setEquippable(eq);
             }
         }
-        // Dla hełmu (HEAD): equippable pozostaje niezmieniony
 
         result.setItemMeta(meta);
         return result;
