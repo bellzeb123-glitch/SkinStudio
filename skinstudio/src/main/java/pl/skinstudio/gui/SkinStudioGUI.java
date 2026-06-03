@@ -254,13 +254,8 @@ public class SkinStudioGUI implements Listener {
             return;
         }
 
-        // Odczytaj skin ID PRZED zdjęciem skina
-        String skinId = null;
-        if (targetItem.hasItemMeta()) {
-            skinId = targetItem.getItemMeta().getPersistentDataContainer()
-                .get(new org.bukkit.NamespacedKey(plugin, "skinstudio_skin_id"),
-                    org.bukkit.persistence.PersistentDataType.STRING);
-        }
+        // Odczytaj skin ID przez TokenUtil (zapisane w przedmiocie przy nakładaniu)
+        String skinId = TokenUtil.getSkinIdFromItem(targetItem);
 
         ItemStack restored = TokenUtil.removeSkin(targetItem);
         if (restored == null) { msg(player, "&cBlad podczas zdejmowania skina!"); return; }
