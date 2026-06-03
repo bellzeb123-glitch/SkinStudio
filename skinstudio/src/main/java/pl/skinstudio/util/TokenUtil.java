@@ -81,6 +81,13 @@ public class TokenUtil {
             .get(new NamespacedKey(SkinStudio.getInstance(), KEY_SKIN_ID), PersistentDataType.STRING);
     }
 
+    /** Odczytuje skin_id zapisane w przedmiocie po nałożeniu skina */
+    public static String getSkinIdFromItem(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return null;
+        return item.getItemMeta().getPersistentDataContainer()
+            .get(new NamespacedKey(SkinStudio.getInstance(), KEY_SKIN_ID), PersistentDataType.STRING);
+    }
+
     public static boolean hasCustomSkin(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return false;
         return item.getItemMeta().getPersistentDataContainer()
@@ -104,6 +111,10 @@ public class TokenUtil {
             NamespacedKey cur = meta.getItemModel();
             pdc.set(origModelKey, PersistentDataType.STRING, cur != null ? cur.toString() : "");
         }
+
+        // Zapisz skin_id w przedmiocie (potrzebne do zwrotu tokenu przy zdejmowaniu)
+        NamespacedKey skinIdKey = new NamespacedKey(plugin, KEY_SKIN_ID);
+        pdc.set(skinIdKey, PersistentDataType.STRING, skin.getId());
 
         // Ustaw nowy item_model
         meta.setItemModel(parseKey(skin.getItemModel()));
