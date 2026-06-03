@@ -50,6 +50,7 @@ public class AdminGUI implements Listener {
         PALLADIUM ("&bPalladium",   Material.CYAN_STAINED_GLASS_PANE,   "palladium"),
         ULTIMATIUM("&eUltimatium",  Material.YELLOW_STAINED_GLASS_PANE, "ultimatium"),
         UNIQUE    ("&cUnikalne",    Material.RED_STAINED_GLASS_PANE,    null),
+        FMM       ("&6FMM",         Material.BLAZE_ROD,                 "craftenmine"),
         TOKENS    ("&fTokeny",      Material.NETHER_STAR,               null);
 
         final String label;
