@@ -239,18 +239,39 @@ public class SkinStudioGUI implements Listener {
 
     private void handleRemoveSkin(Player player, Inventory inv, ItemStack targetItem) {
         if (!TokenUtil.hasCustomSkin(targetItem)) {
-            msg(player, "&cTen przedmiot nie ma nałożonego skina!");
+            msg(player, "&cTen przedmiot nie ma nalozonego skina!");
             player.playSound(player, Sound.ENTITY_VILLAGER_NO, 1f, 1f);
             return;
         }
 
+        // Odczytaj skin ID PRZED zdjęciem skina
+        String skinId = null;
+        if (targetItem.hasItemMeta()) {
+            skinId = targetItem.getItemMeta().getPersistentDataContainer()
+                .get(new org.bukkit.NamespacedKey(plugin, "skinstudio_skin_id"),
+                    org.bukkit.persistence.PersistentDataType.STRING);
+        }
+
         ItemStack restored = TokenUtil.removeSkin(targetItem);
-        if (restored == null) { msg(player, "&cBłąd podczas zdejmowania skina!"); return; }
+        if (restored == null) { msg(player, "&cBlad podczas zdejmowania skina!"); return; }
 
         inv.setItem(SLOT_CHANGE_TOKEN, null);
         inv.setItem(SLOT_ITEM, restored);
 
-        msg(player, "&aSkin został zdjęty z przedmiotu.");
+        // Zwróć Token Skina graczowi
+        if (skinId != null && !skinId.isEmpty()) {
+            pl.skinstudio.model.SkinDefinition skin = plugin.getSkinConfig().getSkin(skinId);
+            if (skin != null) {
+                ItemStack skinToken = pl.skinstudio.util.TokenUtil.createSkinToken(skin);
+                returnToPlayer(player, skinToken);
+                msg(player, "&aSkin zostal zdjety. Otrzymales z powrotem: &f" + skin.getDisplayName());
+            } else {
+                msg(player, "&aSkin zostal zdjety z przedmiotu.");
+            }
+        } else {
+            msg(player, "&aSkin zostal zdjety z przedmiotu.");
+        }
+
         player.playSound(player, Sound.BLOCK_ANVIL_USE, 1f, 1f);
     }
 
