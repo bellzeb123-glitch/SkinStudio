@@ -26,18 +26,17 @@ public class SkinStudioGUI implements Listener {
     /*
      * Układ GUI (3 rzędy = 27 slotów):
      *
-     *  [0][1][2][3][4][5][6][7][8]   <- rząd 1
-     *  [9][A][B][C][D][E][F][G][H]   <- rząd 2
-     *  [I][J][K][L][M][N][O][P][Q]   <- rząd 3
-     *
-     *  Slot 9  = opis "Token Zmiany"   (zablokowany, tylko do czytania)
-     *  Slot 10 = PUSTY slot roboczy    (tu gracz wkłada Token Zmiany)
+     *  Slot 9  = opis "Token Zmiany"   (zablokowany)
+     *  Slot 10 = PUSTY slot roboczy    (Token Zmiany — tylko do zdejmowania skina)
      *  Slot 12 = opis "Przedmiot"      (zablokowany)
      *  Slot 13 = PUSTY slot roboczy    (tu gracz wkłada broń/zbroję)
      *  Slot 15 = opis "Token Skina"    (zablokowany)
      *  Slot 16 = PUSTY slot roboczy    (tu gracz wkłada Token Skina)
      *  Slot 22 = przycisk Zastosuj
-     *  Reszta  = szare szkło (zablokowane)
+     *
+     *  NAKŁADANIE: przedmiot + Token Skina (bez Tokenu Zmiany)
+     *  ZDEJMOWANIE: Token Zmiany + przedmiot ze skinem (bez Tokenu Skina)
+     *               → zwraca przedmiot + Token Skina
      */
 
     private static final int SLOT_CHANGE_LABEL = 9;
@@ -76,26 +75,28 @@ public class SkinStudioGUI implements Listener {
         inv.setItem(SLOT_SKIN_TOKEN, null);
 
         // Etykiety obok slotów roboczych
-        inv.setItem(SLOT_CHANGE_LABEL, makeItem(Material.LIME_STAINED_GLASS_PANE,
-            "&a▼ Token Zmiany",
-            List.of("&7Wrzuć tutaj Token Zmiany.", "&7Wymagany zawsze.")));
+        inv.setItem(SLOT_CHANGE_LABEL, makeItem(Material.RED_STAINED_GLASS_PANE,
+            "&c▼ Change Token",
+            List.of("&7Place here to REMOVE skin.",
+                    "&7Leave empty to apply skin.")));
 
         inv.setItem(SLOT_ITEM_LABEL, makeItem(Material.BLUE_STAINED_GLASS_PANE,
-            "&b▼ Przedmiot",
-            List.of("&7Wrzuć tutaj broń", "&7lub zbroję.")));
+            "&b▼ Item",
+            List.of("&7Place your weapon", "&7or armor here.")));
 
         inv.setItem(SLOT_SKIN_LABEL, makeItem(Material.PURPLE_STAINED_GLASS_PANE,
-            "&d▼ Token Skina",
-            List.of("&7Wrzuć Token Skina.", "&7Zostaw puste aby", "&7zdjąć skin.")));
+            "&d▼ Skin Token",
+            List.of("&7Place Skin Token to apply.",
+                    "&7Leave empty to remove skin.")));
 
         // Przycisk Zastosuj
         inv.setItem(SLOT_APPLY, makeItem(Material.EMERALD,
-            "&a✔ Zastosuj",
+            "&a✔ Apply",
             List.of(
-                "&7Nakłada lub zdejmuje skin.",
+                "&eApply skin&7: Item + Skin Token",
+                "&eRemove skin&7: Change Token + Item",
                 "",
-                "&eBez Tokenu Skina &7— zdejmuje skin.",
-                "&eBez Tokenu Zmiany &7— nic nie zrobi."
+                "&7Removing returns the Skin Token."
             )));
     }
 
@@ -180,32 +181,42 @@ public class SkinStudioGUI implements Listener {
         ItemStack targetItem  = inv.getItem(SLOT_ITEM);
         ItemStack skinToken   = inv.getItem(SLOT_SKIN_TOKEN);
 
-        // Walidacja Token Zmiany
-        if (!TokenUtil.isChangeToken(changeToken)) {
-            msg(player, "&cBrak Tokenu Zmiany w lewym slocie!");
-            player.playSound(player, Sound.ENTITY_VILLAGER_NO, 1f, 1f);
-            return;
-        }
-
-        // Walidacja przedmiotu
+        // Walidacja przedmiotu — zawsze wymagany
         if (targetItem == null || targetItem.getType() == Material.AIR) {
-            msg(player, "&cBrak przedmiotu w środkowym slocie!");
+            msg(player, "&cNo item in the center slot!");
             player.playSound(player, Sound.ENTITY_VILLAGER_NO, 1f, 1f);
             return;
         }
 
-        boolean hasSkinToken = skinToken != null && skinToken.getType() != Material.AIR;
+        boolean hasChangeToken = changeToken != null
+            && changeToken.getType() != Material.AIR
+            && TokenUtil.isChangeToken(changeToken);
+        boolean hasSkinToken = skinToken != null
+            && skinToken.getType() != Material.AIR
+            && TokenUtil.isSkinToken(skinToken);
 
-        if (!hasSkinToken) {
+        // ZDEJMOWANIE: Change Token + item (bez Skin Tokenu)
+        if (hasChangeToken && !hasSkinToken) {
             handleRemoveSkin(player, inv, targetItem);
-        } else {
-            if (!TokenUtil.isSkinToken(skinToken)) {
-                msg(player, "&cPrzedmiot w prawym slocie nie jest Tokenem Skina!");
-                player.playSound(player, Sound.ENTITY_VILLAGER_NO, 1f, 1f);
-                return;
-            }
-            handleApplySkin(player, inv, targetItem, skinToken);
+            return;
         }
+
+        // NAKŁADANIE: item + Skin Token (bez Change Tokenu)
+        if (hasSkinToken && !hasChangeToken) {
+            handleApplySkin(player, inv, targetItem, skinToken);
+            return;
+        }
+
+        // Oba tokeny — błąd
+        if (hasChangeToken && hasSkinToken) {
+            msg(player, "&cUse either Change Token (remove) OR Skin Token (apply), not both!");
+            player.playSound(player, Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+            return;
+        }
+
+        // Żaden token — błąd
+        msg(player, "&cAdd a Skin Token to apply, or a Change Token to remove!");
+        player.playSound(player, Sound.ENTITY_VILLAGER_NO, 1f, 1f);
     }
 
     private void handleApplySkin(Player player, Inventory inv,
@@ -228,12 +239,11 @@ public class SkinStudioGUI implements Listener {
 
         ItemStack modified = TokenUtil.applySkin(targetItem, skin);
 
-        // Usuń tokeny ze slotów
-        inv.setItem(SLOT_CHANGE_TOKEN, null);
+        // Skin Token zużyty, Change Token nie jest potrzebny
         inv.setItem(SLOT_SKIN_TOKEN, null);
         inv.setItem(SLOT_ITEM, modified);
 
-        msg(player, "&aSkin &f" + skin.getDisplayName() + " &azostał nałożony!");
+        msg(player, "&aSkin &f" + skin.getDisplayName() + " &aapplied!");
         player.playSound(player, Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.5f);
     }
 
