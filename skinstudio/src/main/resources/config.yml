@@ -82,7 +82,7 @@ skins:
   bronze_helmet:
     display-name: "&8[&6Brąz&8] &fToken Skina: Hełm"
     item-model: "elitemobs:gear/bronze_helmet"
-    equipment-asset: "elitemobs:bronze"
+    equipment-asset: ""
     item-types:
       - DIAMOND_HELMET
       - IRON_HELMET
@@ -188,7 +188,7 @@ skins:
   living_helmet:
     display-name: "&8[&aŻyjący&8] &fToken Skina: Hełm"
     item-model: "elitemobs:gear/living_helmet"
-    equipment-asset: "elitemobs:living"
+    equipment-asset: ""
     item-types:
       - DIAMOND_HELMET
       - IRON_HELMET
@@ -294,7 +294,7 @@ skins:
   corrupted_helmet:
     display-name: "&8[&5Skażony&8] &fToken Skina: Hełm"
     item-model: "elitemobs:gear/corrupted_helmet"
-    equipment-asset: "elitemobs:corrupted"
+    equipment-asset: ""
     item-types:
       - DIAMOND_HELMET
       - IRON_HELMET
@@ -400,7 +400,7 @@ skins:
   palladium_helmet:
     display-name: "&8[&bPalladium&8] &fToken Skina: Hełm"
     item-model: "elitemobs:gear/palladium_helmet"
-    equipment-asset: "elitemobs:palladium"
+    equipment-asset: ""
     item-types:
       - DIAMOND_HELMET
       - IRON_HELMET
@@ -506,7 +506,7 @@ skins:
   ultimatium_helmet:
     display-name: "&8[&eUltimatium&8] &fToken Skina: Hełm"
     item-model: "elitemobs:gear/ultimatium_helmet"
-    equipment-asset: "elitemobs:ultimatium"
+    equipment-asset: ""
     item-types:
       - DIAMOND_HELMET
       - IRON_HELMET
@@ -592,3 +592,47 @@ skins:
       - GOLDEN_SWORD
       - NETHERITE_SWORD
       - STICK
+
+  # ── FMM CRAFTENMINE ──────────────────────────────────────
+  craftenmine_formula7_sword:
+    display-name: "&8[&6Craftenmine&8] &fToken Skina: Formula #7"
+    item-model: "freeminecraftmodels:display/fmm_craftenmine_basic_item_pack_formula_7_sword"
+    equipment-asset: ""
+    item-types:
+      - DIAMOND_SWORD
+      - IRON_SWORD
+      - GOLDEN_SWORD
+      - NETHERITE_SWORD
+      - STONE_SWORD
+      - WOODEN_SWORD
+
+  craftenmine_aqua_prodder_spear:
+    display-name: "&8[&6Craftenmine&8] &fToken Skina: Aqua Prodder"
+    item-model: "freeminecraftmodels:display/fmm_craftenmine_basic_item_pack_aqua_prodder_spear"
+    equipment-asset: ""
+    item-types:
+      - TRIDENT
+
+  craftenmine_inertial_persuader_mace:
+    display-name: "&8[&6Craftenmine&8] &fToken Skina: Inertial Persuader"
+    item-model: "freeminecraftmodels:display/fmm_craftenmine_basic_item_pack_inertial_persuader_mace"
+    equipment-asset: ""
+    item-types:
+      - MACE
+      - DIAMOND_AXE
+      - IRON_AXE
+      - NETHERITE_AXE
+
+  craftenmine_velocity_mk1_bow:
+    display-name: "&8[&6Craftenmine&8] &fToken Skina: Velocity Enhancer Mk.I"
+    item-model: "freeminecraftmodels:display/fmm_craftenmine_basic_item_pack_velocity_enhancer_mk1_bow_idle"
+    equipment-asset: ""
+    item-types:
+      - BOW
+
+  craftenmine_velocity_mk2_crossbow:
+    display-name: "&8[&6Craftenmine&8] &fToken Skina: Velocity Enhancer Mk.II"
+    item-model: "freeminecraftmodels:display/fmm_craftenmine_basic_item_pack_velocity_enhancer_mk2_crossbow_idle"
+    equipment-asset: ""
+    item-types:
+      - CROSSBOW
