@@ -87,7 +87,7 @@ public class TokenUtil {
             .has(new NamespacedKey(SkinStudio.getInstance(), KEY_ORIGINAL_MODEL), PersistentDataType.STRING);
     }
 
-    // ── Aplikowanie / zdejmowanie skina ──────────────────────
+    // ── Aplikowanie skina ────────────────────────────────────
 
     public static ItemStack applySkin(ItemStack item, SkinDefinition skin) {
         ItemStack result = item.clone();
@@ -108,16 +108,17 @@ public class TokenUtil {
         // Ustaw nowy item_model
         meta.setItemModel(parseKey(skin.getItemModel()));
 
-        // Obsługa zbroi — equipment asset (tekstura na ciele gracza)
+        // Obsługa equipment texture — TYLKO dla napierśnika, spodni, butów
+        // Hełm (HEAD slot) używa item_model jako 3D model, NIE equipment texture
+        // Dlatego dla hełmów equipment-asset jest "" i ta sekcja się nie wykona
         if (skin.hasEquipmentAsset()) {
             EquipmentSlot eqSlot = getEquipmentSlot(item.getType());
-            if (eqSlot != null) {
-                // Zapisz czy miał equippable (tylko raz)
+            // Pomijamy HEAD — hełm renderuje się przez item_model, nie equipment texture
+            if (eqSlot != null && eqSlot != EquipmentSlot.HEAD) {
                 if (!pdc.has(hadEquipKey, PersistentDataType.BYTE)) {
                     pdc.set(hadEquipKey, PersistentDataType.BYTE,
                         meta.hasEquippable() ? (byte)1 : (byte)0);
                 }
-                // Zapisz oryginalny model equippable (tylko raz)
                 if (!pdc.has(origEquipKey, PersistentDataType.STRING)) {
                     String origEquip = "";
                     if (meta.hasEquippable()) {
@@ -127,22 +128,16 @@ public class TokenUtil {
                     pdc.set(origEquipKey, PersistentDataType.STRING, origEquip);
                 }
 
-                // Pobierz lub utwórz EquippableComponent
-                // KLUCZOWE: getEquippable() na item który go nie ma — tworzy nowy
-                // ale bez ustawionego slotu, co blokuje zakładanie na głowę itp.
-                // Dlatego tworzymy ItemStack wzorcowy z właściwym materiałem
-                // i pobieramy z niego equippable ze słusznym slotem
                 EquippableComponent eq;
                 if (meta.hasEquippable()) {
                     eq = meta.getEquippable();
                 } else {
-                    // Utwórz wzorcowy item tego samego typu żeby dostać equippable z slotem
+                    // Utwórz wzorcowy item żeby dostać equippable z właściwym slotem
                     ItemStack template = new ItemStack(item.getType());
                     ItemMeta templateMeta = template.getItemMeta();
                     if (templateMeta.hasEquippable()) {
                         eq = templateMeta.getEquippable();
                     } else {
-                        // Ostateczny fallback — pobierz i ustaw slot ręcznie
                         eq = meta.getEquippable();
                         eq.setSlot(eqSlot);
                     }
@@ -155,6 +150,8 @@ public class TokenUtil {
         result.setItemMeta(meta);
         return result;
     }
+
+    // ── Zdejmowanie skina ────────────────────────────────────
 
     public static ItemStack removeSkin(ItemStack item) {
         if (!hasCustomSkin(item)) return null;
@@ -178,16 +175,21 @@ public class TokenUtil {
         // Przywróć item_model
         meta.setItemModel(origModel != null && !origModel.isEmpty() ? parseKey(origModel) : null);
 
-        // Przywróć equippable
-        if (hadEquip == 0) {
-            // Nie miał equippable — usuń go
-            meta.setEquippable(null);
-        } else if (meta.hasEquippable()) {
-            // Miał equippable — przywróć oryginalny model
-            EquippableComponent eq = meta.getEquippable();
-            eq.setModel(origEquip.isEmpty() ? null : parseKey(origEquip));
-            meta.setEquippable(eq);
+        // Przywróć equippable — tylko dla nie-hełmów
+        // Hełmy nie mają equipment texture więc nie ruszamy equippable
+        EquipmentSlot slot = getEquipmentSlot(item.getType());
+        if (slot != EquipmentSlot.HEAD) {
+            if (hadEquip == 0) {
+                // Nie miał equippable — usuń
+                if (meta.hasEquippable()) meta.setEquippable(null);
+            } else if (meta.hasEquippable()) {
+                // Miał equippable — przywróć oryginalny model
+                EquippableComponent eq = meta.getEquippable();
+                eq.setModel(origEquip.isEmpty() ? null : parseKey(origEquip));
+                meta.setEquippable(eq);
+            }
         }
+        // Dla hełmu (HEAD): equippable pozostaje niezmieniony
 
         result.setItemMeta(meta);
         return result;
