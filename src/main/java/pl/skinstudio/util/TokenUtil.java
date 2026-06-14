@@ -33,9 +33,9 @@ public class TokenUtil {
         SkinStudio plugin = SkinStudio.getInstance();
         ItemStack item = new ItemStack(plugin.getSkinConfig().getChangeTokenMaterial());
         ItemMeta meta = item.getItemMeta();
-        meta.displayName(colorize(plugin.getSkinConfig().getChangeTokenName()));
+        meta.displayName(colorize(plugin.getLang().getRaw("token.change-name")));
         List<Component> lore = new ArrayList<>();
-        for (String line : plugin.getSkinConfig().getChangeTokenLore()) lore.add(colorize(line));
+        for (String line : plugin.getLang().getList("token.change-lore")) lore.add(colorize(line));
         meta.lore(lore);
         meta.getPersistentDataContainer().set(
             new NamespacedKey(plugin, KEY_TOKEN_TYPE), PersistentDataType.STRING, TOKEN_TYPE_CHANGE);
@@ -49,10 +49,10 @@ public class TokenUtil {
         ItemMeta meta = item.getItemMeta();
         meta.displayName(colorize(skin.getDisplayName()));
         List<Component> lore = new ArrayList<>();
-        lore.add(colorize("&7Model: &f" + skin.getItemModel()));
-        lore.add(colorize("&7ID: &f" + skin.getId()));
+        lore.add(colorize(plugin.getLang().getRaw("token.skin-model", "model", skin.getItemModel())));
+        lore.add(colorize(plugin.getLang().getRaw("token.skin-id", "id", skin.getId())));
         lore.add(Component.empty());
-        lore.add(colorize("&eUżyj w Skin Studio aby nałożyć skin."));
+        lore.add(colorize(plugin.getLang().getRaw("token.skin-hint")));
         meta.lore(lore);
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
         pdc.set(new NamespacedKey(plugin, KEY_TOKEN_TYPE), PersistentDataType.STRING, TOKEN_TYPE_SKIN);

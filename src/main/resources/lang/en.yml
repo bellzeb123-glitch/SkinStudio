@@ -1,5 +1,15 @@
 prefix: "&8[&6SkinStudio&8] &r"
 
+# ─── Token items (given to players) ──────────────────────
+token:
+  change-name: "&6✦ Change Token"
+  change-lore:
+    - "&7Required to remove"
+    - "&7a skin from an item."
+  skin-model: "&7Model: &f{model}"
+  skin-id: "&7ID: &f{id}"
+  skin-hint: "&eUse in Skin Studio to apply skin."
+
 # ─── GUI: Skin Studio (player) ────────────────────────────
 gui:
   title: "&8✦ &6Skin Studio &8✦"
@@ -47,12 +57,16 @@ admin:
   skin-right-click: "&eRight-click &7→ choose amount"
   change-left-click: "&aLeft-click &7→ give 1"
   change-right-click: "&eRight-click &7→ choose amount"
+  change-token-name: "&6✦ Change Token"
+  change-token-lore:
+    - "&7Required to remove"
+    - "&7a skin from an item."
   info-title: "&eℹ How to use tokens"
   info-lore:
-    - "&7Change Token — always required."
-    - "&7Skin Token — determines the look."
+    - "&eApply skin&7: Item + Skin Token"
+    - "&eRemove skin&7: Item + Change Token"
     - ""
-    - "&7Player needs both in /skinstudio."
+    - "&7Place items in /skinstudio and click Apply."
   gave-skin-token: "&aGave: &f{name}"
   gave-amount: "&aGave &f{amount}x &f{name}"
   prompt-amount: "&eType amount in chat &7(1-64), or &ccancel&7 to abort:"
@@ -60,10 +74,10 @@ admin:
   prompt-invalid: "&cInvalid number — type 1-64."
   prompt-range: "&cAmount must be between 1 and 64."
   prompt-skin-error: "&cError: skin does not exist."
-  language-button: "&bLanguage: &f{lang}"
+  language-button: "&b⚙ Language: &f{lang}"
   language-lore:
-    - "&7Click to switch the plugin"
-    - "&7language."
+    - "&7Click to cycle between"
+    - "&7available languages."
   language-changed: "&aLanguage changed to &f{lang}&a."
 
 # ─── Commands ──────────────────────────────────────────────

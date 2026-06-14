@@ -176,9 +176,9 @@ public class AdminGUI implements Listener {
     private ItemStack changeTokenItem() {
         ItemStack item = new ItemStack(plugin.getSkinConfig().getChangeTokenMaterial());
         ItemMeta meta = item.getItemMeta();
-        meta.displayName(colorize(plugin.getSkinConfig().getChangeTokenName()));
+        meta.displayName(colorize(lang().getRaw("admin.change-token-name")));
         List<Component> lore = new ArrayList<>();
-        for (String l : plugin.getSkinConfig().getChangeTokenLore()) lore.add(colorize(l));
+        for (String l : lang().getList("admin.change-token-lore")) lore.add(colorize(l));
         lore.add(Component.empty());
         lore.add(colorize(lang().getRaw("admin.change-left-click")));
         lore.add(colorize(lang().getRaw("admin.change-right-click")));

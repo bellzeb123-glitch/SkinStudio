@@ -1,5 +1,15 @@
 prefix: "&8[&6SkinStudio&8] &r"
 
+# ─── Tokeny (dawane graczom) ─────────────────────────────
+token:
+  change-name: "&6✦ Token Zmiany"
+  change-lore:
+    - "&7Wymagany do zdjęcia"
+    - "&7skina z przedmiotu."
+  skin-model: "&7Model: &f{model}"
+  skin-id: "&7ID: &f{id}"
+  skin-hint: "&eUżyj w Skin Studio aby nałożyć skin."
+
 # ─── GUI: Skin Studio (gracz) ─────────────────────────────
 gui:
   title: "&8✦ &6Skin Studio &8✦"
@@ -47,12 +57,16 @@ admin:
   skin-right-click: "&ePrawy klik &7→ wybierz ilość"
   change-left-click: "&aLewy klik &7→ daj 1 szt."
   change-right-click: "&ePrawy klik &7→ wybierz ilość"
+  change-token-name: "&6✦ Token Zmiany"
+  change-token-lore:
+    - "&7Wymagany do zdjęcia"
+    - "&7skina z przedmiotu."
   info-title: "&eℹ Jak używać tokenów"
   info-lore:
-    - "&7Token Zmiany — wymagany zawsze."
-    - "&7Token Skina — określa wygląd."
+    - "&eNałóż skin&7: Przedmiot + Token Skina"
+    - "&eZdejmij skin&7: Przedmiot + Token Zmiany"
     - ""
-    - "&7Gracz potrzebuje obu w /skinstudio."
+    - "&7Umieść przedmioty w /skinstudio i kliknij Zastosuj."
   gave-skin-token: "&aDodano: &f{name}"
   gave-amount: "&aDodano &f{amount}x &f{name}"
   prompt-amount: "&eWpisz ilość na czacie &7(1-64), lub &ccancel&7 aby anulować:"
@@ -60,10 +74,10 @@ admin:
   prompt-invalid: "&cNieprawidłowa liczba — wpisz 1-64."
   prompt-range: "&cIlość musi być między 1 a 64."
   prompt-skin-error: "&cBłąd: skin nie istnieje."
-  language-button: "&bJęzyk: &f{lang}"
+  language-button: "&b⚙ Język: &f{lang}"
   language-lore:
-    - "&7Kliknij aby zmienić język"
-    - "&7pluginu."
+    - "&7Kliknij aby przełączyć"
+    - "&7między dostępnymi językami."
   language-changed: "&aZmieniono język na &f{lang}&a."
 
 # ─── Komendy ──────────────────────────────────────────────
