@@ -1,7 +1,5 @@
 package pl.skinstudio.commands;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -9,6 +7,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import pl.skinstudio.SkinStudio;
+import pl.skinstudio.config.LangManager;
 import pl.skinstudio.model.SkinDefinition;
 import pl.skinstudio.util.ResourcePackScanner;
 import pl.skinstudio.util.TokenUtil;
@@ -26,10 +25,12 @@ public class SkinTokenCommand implements CommandExecutor, TabCompleter {
         plugin.getCommand("skintoken").setTabCompleter(this);
     }
 
+    private LangManager lang() { return plugin.getLang(); }
+
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!sender.hasPermission("skinstudio.admin")) {
-            sender.sendMessage(c("&cNie masz uprawnień!"));
+            sender.sendMessage(lang().component("command.no-permission"));
             return true;
         }
 
@@ -42,26 +43,26 @@ public class SkinTokenCommand implements CommandExecutor, TabCompleter {
 
             case "give" -> {
                 if (args.length < 3) {
-                    sender.sendMessage(c("&cUżycie: /skintoken give <gracz> <skin_id> [ilość]"));
+                    sender.sendMessage(lang().component("command.token-give-usage"));
                     return true;
                 }
                 Player target = Bukkit.getPlayer(args[1]);
                 if (target == null) {
-                    sender.sendMessage(c("&cNie znaleziono gracza: &e" + args[1]));
+                    sender.sendMessage(lang().component("command.player-not-found", "player", args[1]));
                     return true;
                 }
                 String skinId = args[2];
                 SkinDefinition skin = plugin.getSkinConfig().getSkin(skinId);
                 if (skin == null) {
-                    sender.sendMessage(c("&cNieznany skin ID: &e" + skinId));
-                    sender.sendMessage(c("&7Użyj &f/skintoken list &7lub &f/skintoken scan &7aby znaleźć dostępne."));
+                    sender.sendMessage(lang().component("command.skin-not-found", "skin", skinId));
+                    sender.sendMessage(lang().component("command.skin-not-found-hint"));
                     return true;
                 }
                 int amount = 1;
                 if (args.length >= 4) {
                     try { amount = Math.max(1, Math.min(64, Integer.parseInt(args[3]))); }
                     catch (NumberFormatException e) {
-                        sender.sendMessage(c("&cNieprawidłowa ilość."));
+                        sender.sendMessage(lang().component("command.invalid-amount"));
                         return true;
                     }
                 }
@@ -70,25 +71,27 @@ public class SkinTokenCommand implements CommandExecutor, TabCompleter {
                 var leftover = target.getInventory().addItem(token);
                 if (!leftover.isEmpty()) leftover.values().forEach(i ->
                     target.getWorld().dropItemNaturally(target.getLocation(), i));
-                sender.sendMessage(c("&aDano &f" + amount + "x Token Skina (" + skinId + ")&a graczowi &f" + target.getName()));
-                target.sendMessage(c("&aOtrzymałeś Token Skina: &f" + skin.getDisplayName()));
+                sender.sendMessage(lang().component("command.gave-skin",
+                    "amount", amount, "skin", skinId, "player", target.getName()));
+                target.sendMessage(lang().component("command.received-skin",
+                    "skin", skin.getDisplayName()));
             }
 
             case "giveremove" -> {
                 if (args.length < 2) {
-                    sender.sendMessage(c("&cUżycie: /skintoken giveremove <gracz> [ilość]"));
+                    sender.sendMessage(lang().component("command.token-giveremove-usage"));
                     return true;
                 }
                 Player target = Bukkit.getPlayer(args[1]);
                 if (target == null) {
-                    sender.sendMessage(c("&cNie znaleziono gracza: &e" + args[1]));
+                    sender.sendMessage(lang().component("command.player-not-found", "player", args[1]));
                     return true;
                 }
                 int amount = 1;
                 if (args.length >= 3) {
                     try { amount = Math.max(1, Math.min(64, Integer.parseInt(args[2]))); }
                     catch (NumberFormatException e) {
-                        sender.sendMessage(c("&cNieprawidłowa ilość."));
+                        sender.sendMessage(lang().component("command.invalid-amount"));
                         return true;
                     }
                 }
@@ -96,15 +99,16 @@ public class SkinTokenCommand implements CommandExecutor, TabCompleter {
                 token.setAmount(amount);
                 target.getInventory().addItem(token).values().forEach(i ->
                     target.getWorld().dropItemNaturally(target.getLocation(), i));
-                sender.sendMessage(c("&aDano &f" + amount + "x Token Zmiany &agraczowi &f" + target.getName()));
-                target.sendMessage(c("&aOtrzymałeś Token Zmiany!"));
+                sender.sendMessage(lang().component("command.gave-change",
+                    "amount", amount, "player", target.getName()));
+                target.sendMessage(lang().component("command.received-change"));
             }
 
             case "list" -> {
-                sender.sendMessage(c("&6&l=== Dostępne Skiny (" + plugin.getSkinConfig().getAllSkins().size() + ") ==="));
                 Map<String, SkinDefinition> all = plugin.getSkinConfig().getAllSkins();
+                sender.sendMessage(lang().component("command.list-title", "count", all.size()));
                 if (all.isEmpty()) {
-                    sender.sendMessage(c("&cBrak zdefiniowanych skinów. Użyj /skintoken scan"));
+                    sender.sendMessage(lang().component("command.list-empty"));
                     return true;
                 }
                 String lastTier = "";
@@ -114,30 +118,28 @@ public class SkinTokenCommand implements CommandExecutor, TabCompleter {
                     SkinDefinition skin = entry.getValue();
                     String tier = id.contains("_") ? id.substring(0, id.indexOf('_')) : id;
                     if (!tier.equals(lastTier)) {
-                        sender.sendMessage(c("&8&m        &r &7" + tier.toUpperCase() + " &8&m        "));
+                        sender.sendMessage(colorize("&8&m        &r &7" + tier.toUpperCase() + " &8&m        "));
                         lastTier = tier;
                     }
-                    sender.sendMessage(c("  &f" + id + " &8→ &7" + skin.getItemModel()));
+                    sender.sendMessage(colorize("  &f" + id + " &8→ &7" + skin.getItemModel()));
                 }
             }
 
             case "scan" -> {
-                sender.sendMessage(c("&eSkanowanie resource packów..."));
-                // Uruchom w osobnym wątku żeby nie blokować serwera
+                sender.sendMessage(lang().component("command.scan-start"));
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                     ResourcePackScanner scanner = new ResourcePackScanner(plugin);
                     int added = scanner.scan();
                     Bukkit.getScheduler().runTask(plugin, () -> {
                         if (added < 0) {
-                            sender.sendMessage(c("&cBłąd skanowania — sprawdź konsolę."));
+                            sender.sendMessage(lang().component("command.scan-error"));
                         } else if (added == 0) {
-                            sender.sendMessage(c("&7Nie znaleziono nowych skinów (wszystkie już są w config.yml)."));
+                            sender.sendMessage(lang().component("command.scan-none"));
                         } else {
-                            sender.sendMessage(c("&aDodano &f" + added + "&a nowych skinów do config.yml!"));
-                            // Przeładuj config
+                            sender.sendMessage(lang().component("command.scan-added", "count", added));
                             plugin.reloadConfig();
                             plugin.getSkinConfig().load();
-                            sender.sendMessage(c("&aKonfiguracja przeładowana. Użyj &f/skinstudio admin &aaby zobaczyć nowe skiny."));
+                            sender.sendMessage(lang().component("command.scan-reloaded"));
                         }
                     });
                 });
@@ -146,8 +148,10 @@ public class SkinTokenCommand implements CommandExecutor, TabCompleter {
             case "reload" -> {
                 plugin.reloadConfig();
                 plugin.getSkinConfig().load();
-                sender.sendMessage(c("&aSkinStudio przeładowany. Załadowano &f"
-                    + plugin.getSkinConfig().getAllSkins().size() + "&a skinów."));
+                plugin.getLang().reload();
+                plugin.getAdminGUI().loadTiers();
+                sender.sendMessage(lang().component("command.reloaded",
+                    "count", plugin.getSkinConfig().getAllSkins().size()));
             }
 
             default -> sendHelp(sender);
@@ -172,15 +176,16 @@ public class SkinTokenCommand implements CommandExecutor, TabCompleter {
     }
 
     private void sendHelp(CommandSender sender) {
-        sender.sendMessage(c("&6&l=== SkinToken — Pomoc ==="));
-        sender.sendMessage(c("&e/skintoken give <gracz> <skin_id> [ilość] &7— daj Token Skina"));
-        sender.sendMessage(c("&e/skintoken giveremove <gracz> [ilość] &7— daj Token Zmiany"));
-        sender.sendMessage(c("&e/skintoken list &7— lista dostępnych skinów"));
-        sender.sendMessage(c("&e/skintoken scan &7— skanuj resource packi i dodaj nowe skiny"));
-        sender.sendMessage(c("&e/skintoken reload &7— przeładuj konfigurację"));
+        sender.sendMessage(lang().component("command.token-help-title"));
+        sender.sendMessage(lang().component("command.token-give-usage"));
+        sender.sendMessage(lang().component("command.token-giveremove-usage"));
+        sender.sendMessage(lang().component("command.token-list-usage"));
+        sender.sendMessage(lang().component("command.token-scan-usage"));
+        sender.sendMessage(lang().component("command.token-reload-usage"));
     }
 
-    private Component c(String text) {
-        return LegacyComponentSerializer.legacyAmpersand().deserialize(text);
+    private net.kyori.adventure.text.Component colorize(String text) {
+        return net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+            .legacyAmpersand().deserialize(text);
     }
 }

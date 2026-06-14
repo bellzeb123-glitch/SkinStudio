@@ -186,6 +186,7 @@ public class TokenUtil {
         pdc.remove(origModelKey);
         pdc.remove(origEquipKey);
         pdc.remove(hadEquipKey);
+        pdc.remove(new NamespacedKey(plugin, KEY_SKIN_ID));
 
         // Przywróć item_model
         meta.setItemModel(origModel != null && !origModel.isEmpty() ? parseKey(origModel) : null);

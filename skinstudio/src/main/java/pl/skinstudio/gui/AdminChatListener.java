@@ -6,6 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import pl.skinstudio.SkinStudio;
 
 public class AdminChatListener implements Listener {
 
@@ -23,9 +24,8 @@ public class AdminChatListener implements Listener {
         event.setCancelled(true);
         String message = PlainTextComponentSerializer.plainText().serialize(event.message());
 
-        // Wykonaj na głównym wątku
         player.getServer().getScheduler().runTask(
-            player.getServer().getPluginManager().getPlugin("SkinStudio"),
+            SkinStudio.getInstance(),
             () -> adminGUI.handleChatInput(player, message)
         );
     }

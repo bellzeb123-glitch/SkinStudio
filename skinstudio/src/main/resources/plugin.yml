@@ -1,8 +1,8 @@
 name: SkinStudio
 version: 1.0.0
 main: pl.skinstudio.SkinStudio
-api-version: "26.1.2"
-description: Plugin do nakładania skinów na przedmioty
+api-version: '1.21'
+description: Apply custom model skins to weapons and armor using tokens
 
 commands:
   skinstudio:

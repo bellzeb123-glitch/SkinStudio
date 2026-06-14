@@ -2,6 +2,41 @@
 #  SkinStudio - Konfiguracja
 # ============================================================
 
+# Language: en | pl
+language: en
+
+# ============================================================
+#  Tier tabs for the admin GUI
+#  Each tier auto-collects skins whose ID starts with "<tier-id>_"
+#  Order in this list = order of tabs in the GUI
+# ============================================================
+tiers:
+  bronze:
+    display-name: "&6Bronze"
+    material: ORANGE_STAINED_GLASS_PANE
+  living:
+    display-name: "&aLiving"
+    material: LIME_STAINED_GLASS_PANE
+  corrupted:
+    display-name: "&5Corrupted"
+    material: PURPLE_STAINED_GLASS_PANE
+  palladium:
+    display-name: "&bPalladium"
+    material: CYAN_STAINED_GLASS_PANE
+  ultimatium:
+    display-name: "&eUltimatium"
+    material: YELLOW_STAINED_GLASS_PANE
+  craftenmine:
+    display-name: "&6FMM"
+    material: BLAZE_ROD
+
+# Special skins shown on the "Unique" tab (comma-separated IDs)
+unique-skins:
+  - frost_palace_fire_sword
+  - frost_palace_ice_sword
+  - primis_gladius_sword
+  - magmaguys_toothpick
+
 change-token:
   display-name: "&6✦ Token Zmiany"
   material: NETHER_STAR
