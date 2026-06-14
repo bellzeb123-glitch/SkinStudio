@@ -47,6 +47,7 @@ public class AdminGUI implements Listener {
     private static final String NBT_SKIN_ID   = "ss_skin_id";
     private static final String NBT_IS_CHANGE = "ss_is_change";
     private static final String NBT_TAB_ID    = "ss_tab_id";
+    private static final String NBT_LANGUAGE  = "ss_language_toggle";
 
     private static final int GUI_SIZE = 54;
 
@@ -142,6 +143,7 @@ public class AdminGUI implements Listener {
     private void buildTokensTab(Inventory inv) {
         inv.setItem(9, changeTokenItem());
         inv.setItem(11, infoItem());
+        inv.setItem(13, languageItem());
     }
 
     private ItemStack skinItem(SkinDefinition skin) {
@@ -205,7 +207,7 @@ public class AdminGUI implements Listener {
 
         ItemStack item = new ItemStack(mat);
         ItemMeta meta = item.getItemMeta();
-        meta.displayName(colorize((active ? "&f&l" : "&7") + label));
+        meta.displayName(colorize(active ? boldLabel(label) : label));
         List<Component> lore = new ArrayList<>();
         lore.add(colorize(active
             ? lang().getRaw("admin.tab-active")
@@ -214,6 +216,21 @@ public class AdminGUI implements Listener {
         meta.getPersistentDataContainer().set(
             new NamespacedKey(plugin, NBT_TAB_ID),
             PersistentDataType.STRING, tabId);
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private ItemStack languageItem() {
+        ItemStack item = new ItemStack(Material.COMPASS);
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(colorize(lang().getRaw("admin.language-button",
+            "lang", lang().getLanguage().toUpperCase())));
+        List<Component> lore = new ArrayList<>();
+        for (String line : lang().getList("admin.language-lore")) lore.add(colorize(line));
+        meta.lore(lore);
+        meta.getPersistentDataContainer().set(
+            new NamespacedKey(plugin, NBT_LANGUAGE),
+            PersistentDataType.BYTE, (byte) 1);
         item.setItemMeta(meta);
         return item;
     }
@@ -260,6 +277,12 @@ public class AdminGUI implements Listener {
         NamespacedKey tabKey    = new NamespacedKey(plugin, NBT_TAB_ID);
         NamespacedKey skinKey   = new NamespacedKey(plugin, NBT_SKIN_ID);
         NamespacedKey changeKey = new NamespacedKey(plugin, NBT_IS_CHANGE);
+        NamespacedKey langKey   = new NamespacedKey(plugin, NBT_LANGUAGE);
+
+        if (pdc.has(langKey, PersistentDataType.BYTE)) {
+            cycleLanguage(player);
+            return;
+        }
 
         if (pdc.has(tabKey, PersistentDataType.STRING)) {
             String newTabId = pdc.get(tabKey, PersistentDataType.STRING);
@@ -368,6 +391,19 @@ public class AdminGUI implements Listener {
         return awaitingAmount.containsKey(player.getUniqueId());
     }
 
+    public int getTierCount() { return tiers.size(); }
+
+    private void cycleLanguage(Player player) {
+        List<String> langs = LangManager.AVAILABLE_LANGUAGES;
+        int idx = langs.indexOf(lang().getLanguage());
+        String next = langs.get((idx + 1) % langs.size());
+        plugin.getLang().setLanguage(next);
+
+        player.sendMessage(lang().component("admin.language-changed", "lang", next.toUpperCase()));
+        player.playSound(player, Sound.UI_BUTTON_CLICK, 0.5f, 1f);
+        Bukkit.getScheduler().runTask(plugin, () -> openTab(player, currentTab.get(player.getUniqueId())));
+    }
+
     private TierDef findTier(String id) {
         for (TierDef t : tiers) if (t.id.equals(id)) return t;
         return null;
@@ -397,6 +433,17 @@ public class AdminGUI implements Listener {
         if (key == null || key.isEmpty()) return null;
         String[] p = key.split(":", 2);
         return p.length == 2 ? new NamespacedKey(p[0], p[1]) : NamespacedKey.minecraft(key);
+    }
+
+    /**
+     * Inserts &l (bold) right after a leading color code, since a color code
+     * resets bold formatting in legacy text — "&f&l&6Foo" would render unbold.
+     */
+    private String boldLabel(String label) {
+        if (label.length() >= 2 && label.charAt(0) == '&') {
+            return label.substring(0, 2) + "&l" + label.substring(2);
+        }
+        return "&l" + label;
     }
 
     private Component colorize(String text) {

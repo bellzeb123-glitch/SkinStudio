@@ -1,23 +1,23 @@
 name: SkinStudio
-version: 1.0.0
+version: 1.26.1.2
 main: pl.skinstudio.SkinStudio
 api-version: '1.21'
 description: Apply custom model skins to weapons and armor using tokens
 
 commands:
   skinstudio:
-    description: Otwiera GUI Skin Studio (lub panel admina z /skinstudio admin)
+    description: Opens the Skin Studio GUI (or admin panel with /skinstudio admin)
     usage: /skinstudio [admin]
     permission: skinstudio.use
   skintoken:
-    description: Komendy administracyjne tokenów
-    usage: /skintoken <give|giveremove|list|reload>
+    description: Admin token management commands
+    usage: /skintoken <give|giveremove|list|scan|reload|language>
     permission: skinstudio.admin
 
 permissions:
   skinstudio.use:
-    description: Pozwala używać /skinstudio
+    description: Allows using /skinstudio
     default: true
   skinstudio.admin:
-    description: Pozwala używać /skinstudio admin i /skintoken
+    description: Allows using /skinstudio admin and /skintoken
     default: op

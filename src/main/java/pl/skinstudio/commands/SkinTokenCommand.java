@@ -145,6 +145,23 @@ public class SkinTokenCommand implements CommandExecutor, TabCompleter {
                 });
             }
 
+            case "language" -> {
+                if (args.length < 2) {
+                    sender.sendMessage(lang().component("command.language-current",
+                        "lang", plugin.getLang().getLanguage().toUpperCase()));
+                    sender.sendMessage(lang().component("command.token-language-usage"));
+                    return true;
+                }
+                String code = args[1].toLowerCase();
+                if (!LangManager.AVAILABLE_LANGUAGES.contains(code)) {
+                    sender.sendMessage(lang().component("command.language-invalid",
+                        "languages", String.join(", ", LangManager.AVAILABLE_LANGUAGES)));
+                    return true;
+                }
+                plugin.getLang().setLanguage(code);
+                sender.sendMessage(lang().component("command.language-changed", "lang", code.toUpperCase()));
+            }
+
             case "reload" -> {
                 plugin.reloadConfig();
                 plugin.getSkinConfig().load();
@@ -164,11 +181,13 @@ public class SkinTokenCommand implements CommandExecutor, TabCompleter {
     public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
         List<String> completions = new ArrayList<>();
         if (args.length == 1) {
-            completions.addAll(List.of("give", "giveremove", "list", "scan", "reload"));
+            completions.addAll(List.of("give", "giveremove", "list", "scan", "reload", "language"));
         } else if (args.length == 2 && (args[0].equalsIgnoreCase("give") || args[0].equalsIgnoreCase("giveremove"))) {
             Bukkit.getOnlinePlayers().forEach(p -> completions.add(p.getName()));
         } else if (args.length == 3 && args[0].equalsIgnoreCase("give")) {
             completions.addAll(plugin.getSkinConfig().getAllSkins().keySet());
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("language")) {
+            completions.addAll(LangManager.AVAILABLE_LANGUAGES);
         }
         String filter = args[args.length - 1].toLowerCase();
         completions.removeIf(s -> !s.toLowerCase().startsWith(filter));
@@ -182,6 +201,7 @@ public class SkinTokenCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(lang().component("command.token-list-usage"));
         sender.sendMessage(lang().component("command.token-scan-usage"));
         sender.sendMessage(lang().component("command.token-reload-usage"));
+        sender.sendMessage(lang().component("command.token-language-usage"));
     }
 
     private net.kyori.adventure.text.Component colorize(String text) {

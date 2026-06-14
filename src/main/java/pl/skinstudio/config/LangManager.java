@@ -13,12 +13,23 @@ import java.util.List;
 
 public class LangManager {
 
+    public static final List<String> AVAILABLE_LANGUAGES = List.of("en", "pl");
+
     private final SkinStudio plugin;
     private YamlConfiguration lang;
     private String language;
 
     public LangManager(SkinStudio plugin) {
         this.plugin = plugin;
+        reload();
+    }
+
+    public String getLanguage() { return language; }
+
+    /** Persists the chosen language to config.yml and reloads the language file. */
+    public void setLanguage(String langCode) {
+        plugin.getConfig().set("language", langCode);
+        plugin.saveConfig();
         reload();
     }
 

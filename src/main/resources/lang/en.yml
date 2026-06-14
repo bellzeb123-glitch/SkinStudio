@@ -60,6 +60,11 @@ admin:
   prompt-invalid: "&cInvalid number — type 1-64."
   prompt-range: "&cAmount must be between 1 and 64."
   prompt-skin-error: "&cError: skin does not exist."
+  language-button: "&bLanguage: &f{lang}"
+  language-lore:
+    - "&7Click to switch the plugin"
+    - "&7language."
+  language-changed: "&aLanguage changed to &f{lang}&a."
 
 # ─── Commands ──────────────────────────────────────────────
 command:
@@ -72,6 +77,10 @@ command:
   token-list-usage: "&e/skintoken list &7— list available skins"
   token-scan-usage: "&e/skintoken scan &7— scan resource packs for new skins"
   token-reload-usage: "&e/skintoken reload &7— reload config"
+  token-language-usage: "&e/skintoken language <en|pl> &7— change plugin language"
+  language-current: "&7Current language: &f{lang}"
+  language-changed: "&aLanguage changed to &f{lang}&a."
+  language-invalid: "&cInvalid language. Available: &f{languages}"
   player-not-found: "&cPlayer not found: &e{player}"
   skin-not-found: "&cUnknown skin ID: &e{skin}"
   skin-not-found-hint: "&7Use &f/skintoken list &7or &f/skintoken scan &7to find available skins."

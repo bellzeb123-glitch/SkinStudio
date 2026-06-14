@@ -60,6 +60,11 @@ admin:
   prompt-invalid: "&cNieprawidłowa liczba — wpisz 1-64."
   prompt-range: "&cIlość musi być między 1 a 64."
   prompt-skin-error: "&cBłąd: skin nie istnieje."
+  language-button: "&bJęzyk: &f{lang}"
+  language-lore:
+    - "&7Kliknij aby zmienić język"
+    - "&7pluginu."
+  language-changed: "&aZmieniono język na &f{lang}&a."
 
 # ─── Komendy ──────────────────────────────────────────────
 command:
@@ -72,6 +77,10 @@ command:
   token-list-usage: "&e/skintoken list &7— lista dostępnych skinów"
   token-scan-usage: "&e/skintoken scan &7— skanuj resource packi i dodaj nowe skiny"
   token-reload-usage: "&e/skintoken reload &7— przeładuj konfigurację"
+  token-language-usage: "&e/skintoken language <en|pl> &7— zmień język pluginu"
+  language-current: "&7Aktualny język: &f{lang}"
+  language-changed: "&aZmieniono język na &f{lang}&a."
+  language-invalid: "&cNieprawidłowy język. Dostępne: &f{languages}"
   player-not-found: "&cNie znaleziono gracza: &e{player}"
   skin-not-found: "&cNieznany skin ID: &e{skin}"
   skin-not-found-hint: "&7Użyj &f/skintoken list &7lub &f/skintoken scan &7aby znaleźć dostępne."
