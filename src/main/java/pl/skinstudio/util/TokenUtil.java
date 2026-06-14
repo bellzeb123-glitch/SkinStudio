@@ -148,16 +148,13 @@ public class TokenUtil {
                 meta.setEquippable(eq);
             }
         } else {
-            // Brak equipment-asset w configu (broń lub hełm bez tekstury)
-            // Dla hełmów: upewnij się że equippable z HEAD slotem jest ustawiony
-            // żeby item mógł być założony na głowę
             EquipmentSlot eqSlot = getEquipmentSlot(item.getType());
-            if (eqSlot == EquipmentSlot.HEAD && !meta.hasEquippable()) {
+            if (eqSlot != null && !meta.hasEquippable()) {
                 if (!pdc.has(hadEquipKey, PersistentDataType.BYTE)) {
                     pdc.set(hadEquipKey, PersistentDataType.BYTE, (byte)0);
                 }
                 EquippableComponent eq = meta.getEquippable();
-                eq.setSlot(EquipmentSlot.HEAD);
+                eq.setSlot(eqSlot);
                 meta.setEquippable(eq);
             }
         }
@@ -216,6 +213,7 @@ public class TokenUtil {
     }
 
     private static EquipmentSlot getEquipmentSlot(Material material) {
+        if (material == Material.ELYTRA)  return EquipmentSlot.CHEST;
         String name = material.name();
         if (name.endsWith("_HELMET"))     return EquipmentSlot.HEAD;
         if (name.endsWith("_CHESTPLATE")) return EquipmentSlot.CHEST;

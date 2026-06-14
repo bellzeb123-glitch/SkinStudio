@@ -9,6 +9,7 @@ commands:
     description: Opens the Skin Studio GUI (or admin panel with /skinstudio admin)
     usage: /skinstudio [admin]
     permission: skinstudio.use
+    aliases: [ss]
   skintoken:
     description: Admin token management commands
     usage: /skintoken <give|giveremove|list|scan|reload|language>
