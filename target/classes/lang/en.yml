@@ -1,0 +1,113 @@
+prefix: "&8[&6SkinStudio&8] &r"
+
+# ─── Token items (given to players) ──────────────────────
+token:
+  change-name: "&6✦ Change Token"
+  change-lore:
+    - "&7Required to remove"
+    - "&7a skin from an item."
+  skin-model: "&7Model: &f{model}"
+  skin-id: "&7ID: &f{id}"
+  skin-hint: "&eUse in Skin Studio to apply skin."
+
+# ─── GUI: Skin Studio (player) ────────────────────────────
+gui:
+  title: "&8✦ &6Skin Studio &8✦"
+  label-change-token: "&c▼ Change Token"
+  label-change-lore:
+    - "&7Place here to REMOVE skin."
+    - "&7Leave empty to apply skin."
+  label-item: "&b▼ Item"
+  label-item-lore:
+    - "&7Place your weapon"
+    - "&7or armor here."
+  label-skin-token: "&d▼ Skin Token"
+  label-skin-lore:
+    - "&7Place Skin Token to apply."
+    - "&7Leave empty to remove skin."
+  apply-button: "&a✔ Apply"
+  apply-lore:
+    - "&eApply skin&7: Item + Skin Token"
+    - "&eRemove skin&7: Change Token + Item"
+    - ""
+    - "&7Removing returns the Skin Token."
+  no-item: "&cNo item in the center slot!"
+  both-tokens: "&cUse either Change Token (remove) OR Skin Token (apply), not both!"
+  no-tokens: "&cAdd a Skin Token to apply, or a Change Token to remove!"
+  invalid-skin-token: "&cInvalid Skin Token!"
+  skin-not-found: "&cSkin '{skin}' not found in config!"
+  incompatible-type: "&cThis skin is not compatible with this item type!"
+  incompatible-hint: "&7Required type: &f{type}"
+  skin-applied: "&aSkin &f{skin} &aapplied!"
+  no-skin-on-item: "&cThis item has no skin applied!"
+  skin-removed: "&aSkin removed. Returned: &f{skin}"
+  skin-removed-simple: "&aSkin removed from item."
+  remove-error: "&cError removing skin!"
+
+# ─── GUI: Admin Panel ─────────────────────────────────────
+admin:
+  title: "&8✦ &6Admin: Skin Studio &8✦"
+  tab-active: "&7▶ Currently selected"
+  tab-click: "&7Click to open"
+  tab-tokens: "&fTokens"
+  tab-unique: "&cUnique"
+  skin-id: "&7ID: &f{id}"
+  skin-texture: "&7Texture: &f{asset}"
+  skin-left-click: "&aLeft-click &7→ give 1 Skin Token"
+  skin-right-click: "&eRight-click &7→ choose amount"
+  change-left-click: "&aLeft-click &7→ give 1"
+  change-right-click: "&eRight-click &7→ choose amount"
+  change-token-name: "&6✦ Change Token"
+  change-token-lore:
+    - "&7Required to remove"
+    - "&7a skin from an item."
+  info-title: "&eℹ How to use tokens"
+  info-lore:
+    - "&eApply skin&7: Item + Skin Token"
+    - "&eRemove skin&7: Item + Change Token"
+    - ""
+    - "&7Place items in /skinstudio and click Apply."
+  gave-skin-token: "&aGave: &f{name}"
+  gave-amount: "&aGave &f{amount}x &f{name}"
+  prompt-amount: "&eType amount in chat &7(1-64), or &ccancel&7 to abort:"
+  prompt-cancelled: "&7Cancelled."
+  prompt-invalid: "&cInvalid number — type 1-64."
+  prompt-range: "&cAmount must be between 1 and 64."
+  prompt-skin-error: "&cError: skin does not exist."
+  language-button: "&b⚙ Language: &f{lang}"
+  language-lore:
+    - "&7Click to cycle between"
+    - "&7available languages."
+  language-changed: "&aLanguage changed to &f{lang}&a."
+
+# ─── Commands ──────────────────────────────────────────────
+command:
+  player-only: "&cThis command is for players only!"
+  no-permission: "&cYou don't have permission!"
+  # /skintoken
+  token-help-title: "&6&l=== SkinToken — Help ==="
+  token-give-usage: "&e/skintoken give <player> <skin_id> [amount] &7— give Skin Token"
+  token-giveremove-usage: "&e/skintoken giveremove <player> [amount] &7— give Change Token"
+  token-list-usage: "&e/skintoken list &7— list available skins"
+  token-scan-usage: "&e/skintoken scan &7— scan resource packs for new skins"
+  token-reload-usage: "&e/skintoken reload &7— reload config"
+  token-language-usage: "&e/skintoken language <en|pl> &7— change plugin language"
+  language-current: "&7Current language: &f{lang}"
+  language-changed: "&aLanguage changed to &f{lang}&a."
+  language-invalid: "&cInvalid language. Available: &f{languages}"
+  player-not-found: "&cPlayer not found: &e{player}"
+  skin-not-found: "&cUnknown skin ID: &e{skin}"
+  skin-not-found-hint: "&7Use &f/skintoken list &7or &f/skintoken scan &7to find available skins."
+  invalid-amount: "&cInvalid amount."
+  gave-skin: "&aGave &f{amount}x Skin Token ({skin})&a to &f{player}"
+  received-skin: "&aYou received a Skin Token: &f{skin}"
+  gave-change: "&aGave &f{amount}x Change Token &ato &f{player}"
+  received-change: "&aYou received a Change Token!"
+  list-title: "&6&l=== Available Skins ({count}) ==="
+  list-empty: "&cNo skins defined. Use /skintoken scan"
+  scan-start: "&eScanning resource packs..."
+  scan-error: "&cScan error — check console."
+  scan-none: "&7No new skins found (all already in config.yml)."
+  scan-added: "&aAdded &f{count}&a new skins to config.yml!"
+  scan-reloaded: "&aConfig reloaded. Use &f/skinstudio admin &ato see new skins."
+  reloaded: "&aSkinStudio reloaded. Loaded &f{count}&a skins."

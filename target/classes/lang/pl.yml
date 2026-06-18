@@ -1,0 +1,113 @@
+prefix: "&8[&6SkinStudio&8] &r"
+
+# ─── Tokeny (dawane graczom) ─────────────────────────────
+token:
+  change-name: "&6✦ Token Zmiany"
+  change-lore:
+    - "&7Wymagany do zdjęcia"
+    - "&7skina z przedmiotu."
+  skin-model: "&7Model: &f{model}"
+  skin-id: "&7ID: &f{id}"
+  skin-hint: "&eUżyj w Skin Studio aby nałożyć skin."
+
+# ─── GUI: Skin Studio (gracz) ─────────────────────────────
+gui:
+  title: "&8✦ &6Skin Studio &8✦"
+  label-change-token: "&c▼ Token Zmiany"
+  label-change-lore:
+    - "&7Włóż tutaj aby ZDJĄĆ skin."
+    - "&7Zostaw puste aby nałożyć."
+  label-item: "&b▼ Przedmiot"
+  label-item-lore:
+    - "&7Połóż swoją broń"
+    - "&7lub zbroję tutaj."
+  label-skin-token: "&d▼ Token Skina"
+  label-skin-lore:
+    - "&7Włóż Token Skina aby nałożyć."
+    - "&7Zostaw puste aby zdjąć skin."
+  apply-button: "&a✔ Zastosuj"
+  apply-lore:
+    - "&eNałóż skin&7: Przedmiot + Token Skina"
+    - "&eZdejmij skin&7: Token Zmiany + Przedmiot"
+    - ""
+    - "&7Zdejmowanie zwraca Token Skina."
+  no-item: "&cBrak przedmiotu w środkowym slocie!"
+  both-tokens: "&cUżyj Token Zmiany (zdejmij) LUB Token Skina (nałóż), nie oba!"
+  no-tokens: "&cDodaj Token Skina aby nałożyć lub Token Zmiany aby zdjąć!"
+  invalid-skin-token: "&cNieprawidłowy Token Skina!"
+  skin-not-found: "&cSkin '{skin}' nie istnieje w konfiguracji!"
+  incompatible-type: "&cTen skin nie pasuje do tego typu przedmiotu!"
+  incompatible-hint: "&7Wymagany typ: &f{type}"
+  skin-applied: "&aSkin &f{skin} &anałożony!"
+  no-skin-on-item: "&cTen przedmiot nie ma nałożonego skina!"
+  skin-removed: "&aSkin zdjęty. Zwrócono: &f{skin}"
+  skin-removed-simple: "&aSkin zdjęty z przedmiotu."
+  remove-error: "&cBłąd podczas zdejmowania skina!"
+
+# ─── GUI: Panel admina ────────────────────────────────────
+admin:
+  title: "&8✦ &6Admin: Skin Studio &8✦"
+  tab-active: "&7▶ Aktualnie wybrana"
+  tab-click: "&7Kliknij aby otworzyć"
+  tab-tokens: "&fTokeny"
+  tab-unique: "&cUnikalne"
+  skin-id: "&7ID: &f{id}"
+  skin-texture: "&7Tekstura: &f{asset}"
+  skin-left-click: "&aLewy klik &7→ daj 1 Token Skina"
+  skin-right-click: "&ePrawy klik &7→ wybierz ilość"
+  change-left-click: "&aLewy klik &7→ daj 1 szt."
+  change-right-click: "&ePrawy klik &7→ wybierz ilość"
+  change-token-name: "&6✦ Token Zmiany"
+  change-token-lore:
+    - "&7Wymagany do zdjęcia"
+    - "&7skina z przedmiotu."
+  info-title: "&eℹ Jak używać tokenów"
+  info-lore:
+    - "&eNałóż skin&7: Przedmiot + Token Skina"
+    - "&eZdejmij skin&7: Przedmiot + Token Zmiany"
+    - ""
+    - "&7Umieść przedmioty w /skinstudio i kliknij Zastosuj."
+  gave-skin-token: "&aDodano: &f{name}"
+  gave-amount: "&aDodano &f{amount}x &f{name}"
+  prompt-amount: "&eWpisz ilość na czacie &7(1-64), lub &ccancel&7 aby anulować:"
+  prompt-cancelled: "&7Anulowano."
+  prompt-invalid: "&cNieprawidłowa liczba — wpisz 1-64."
+  prompt-range: "&cIlość musi być między 1 a 64."
+  prompt-skin-error: "&cBłąd: skin nie istnieje."
+  language-button: "&b⚙ Język: &f{lang}"
+  language-lore:
+    - "&7Kliknij aby przełączyć"
+    - "&7między dostępnymi językami."
+  language-changed: "&aZmieniono język na &f{lang}&a."
+
+# ─── Komendy ──────────────────────────────────────────────
+command:
+  player-only: "&cTa komenda jest tylko dla graczy!"
+  no-permission: "&cNie masz uprawnień!"
+  # /skintoken
+  token-help-title: "&6&l=== SkinToken — Pomoc ==="
+  token-give-usage: "&e/skintoken give <gracz> <skin_id> [ilość] &7— daj Token Skina"
+  token-giveremove-usage: "&e/skintoken giveremove <gracz> [ilość] &7— daj Token Zmiany"
+  token-list-usage: "&e/skintoken list &7— lista dostępnych skinów"
+  token-scan-usage: "&e/skintoken scan &7— skanuj resource packi i dodaj nowe skiny"
+  token-reload-usage: "&e/skintoken reload &7— przeładuj konfigurację"
+  token-language-usage: "&e/skintoken language <en|pl> &7— zmień język pluginu"
+  language-current: "&7Aktualny język: &f{lang}"
+  language-changed: "&aZmieniono język na &f{lang}&a."
+  language-invalid: "&cNieprawidłowy język. Dostępne: &f{languages}"
+  player-not-found: "&cNie znaleziono gracza: &e{player}"
+  skin-not-found: "&cNieznany skin ID: &e{skin}"
+  skin-not-found-hint: "&7Użyj &f/skintoken list &7lub &f/skintoken scan &7aby znaleźć dostępne."
+  invalid-amount: "&cNieprawidłowa ilość."
+  gave-skin: "&aDano &f{amount}x Token Skina ({skin})&a graczowi &f{player}"
+  received-skin: "&aOtrzymałeś Token Skina: &f{skin}"
+  gave-change: "&aDano &f{amount}x Token Zmiany &agraczowi &f{player}"
+  received-change: "&aOtrzymałeś Token Zmiany!"
+  list-title: "&6&l=== Dostępne Skiny ({count}) ==="
+  list-empty: "&cBrak zdefiniowanych skinów. Użyj /skintoken scan"
+  scan-start: "&eSkanowanie resource packów..."
+  scan-error: "&cBłąd skanowania — sprawdź konsolę."
+  scan-none: "&7Nie znaleziono nowych skinów (wszystkie już są w config.yml)."
+  scan-added: "&aDodano &f{count}&a nowych skinów do config.yml!"
+  scan-reloaded: "&aKonfiguracja przeładowana. Użyj &f/skinstudio admin &aaby zobaczyć nowe skiny."
+  reloaded: "&aSkinStudio przeładowany. Załadowano &f{count}&a skinów."

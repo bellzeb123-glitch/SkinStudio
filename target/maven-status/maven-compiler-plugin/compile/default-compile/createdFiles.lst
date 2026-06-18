@@ -1,0 +1,16 @@
+pl\skinstudio\commands\SkinStudioCommand.class
+pl\skinstudio\SkinStudio.class
+pl\skinstudio\gui\AdminChatListener.class
+pl\skinstudio\config\SkinConfig.class
+pl\skinstudio\util\TokenUtil.class
+pl\skinstudio\util\ResourcePackScanner$SkinCandidate.class
+pl\skinstudio\gui\AdminGUI$TierDef.class
+pl\skinstudio\util\ResourcePackScanner.class
+pl\skinstudio\commands\SkinTokenCommand.class
+pl\skinstudio\util\ResourcePackScanner$ParsedSkin.class
+pl\skinstudio\gui\AdminGUI$SkinAdminHolder.class
+pl\skinstudio\model\SkinDefinition.class
+pl\skinstudio\gui\SkinStudioGUI$StudioHolder.class
+pl\skinstudio\config\LangManager.class
+pl\skinstudio\gui\SkinStudioGUI.class
+pl\skinstudio\gui\AdminGUI.class
