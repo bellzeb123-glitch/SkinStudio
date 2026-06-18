@@ -1,6 +1,5 @@
 package pl.skinstudio.util;
 
-import org.bukkit.Material;
 import pl.skinstudio.SkinStudio;
 import pl.skinstudio.config.SkinConfig;
 
@@ -8,10 +7,15 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class ResourcePackScanner {
+
+    private static final Pattern GENERIC_ITEM =
+        Pattern.compile("assets/([^/]+)/items/([^/]+)\\.json");
 
     // Mapowanie końcówki nazwy pliku → lista materiałów MC
     private static final Map<String, List<String>> TYPE_MAP = new LinkedHashMap<>();
@@ -41,6 +45,10 @@ public class ResourcePackScanner {
         TYPE_MAP.put("_pike",       List.of("TRIDENT"));
     }
 
+    private static final List<String> DEFAULT_EXCLUDED = List.of(
+        "freeminecraftmodels", "elitemobs", "minecraft", "_iainternal"
+    );
+
     // Pliki które IGNORUJEMY (ikony, stany animacji, fragmenty bossów)
     private static final List<String> IGNORE_SUFFIXES = List.of(
         "_icon", "_pulling_0", "_pulling_1", "_pulling_2",
@@ -48,7 +56,7 @@ public class ResourcePackScanner {
         "_charged", "_idle"
     );
 
-    // Prefiks namespace → ludzka nazwa do wyświetlenia
+    // Prefiks namespace → ludzka nazwa do wyświetlenia (domyślne; nadpisywane w scanner.namespace-display)
     private static final Map<String, String> NAMESPACE_DISPLAY = Map.of(
         "elitemobs", "EliteMobs",
         "freeminecraftmodels", "FMM"
@@ -56,10 +64,12 @@ public class ResourcePackScanner {
 
     private final SkinStudio plugin;
     private final Logger log;
+    private final Set<String> excludedNamespaces;
 
     public ResourcePackScanner(SkinStudio plugin) {
         this.plugin = plugin;
         this.log = plugin.getLogger();
+        this.excludedNamespaces = loadExcludedNamespaces();
     }
 
     /**
@@ -67,22 +77,21 @@ public class ResourcePackScanner {
      * Zwraca liczbę nowo dodanych skinów.
      */
     public int scan() {
-        File mixerDir = new File(plugin.getServer().getPluginsFolder(),
-            "ResourcePackManager/mixer");
+        String mixerPath = plugin.getConfig().getString("scanner.mixer-folder", "ResourcePackManager/mixer");
+        File mixerDir = new File(plugin.getServer().getPluginsFolder(), mixerPath);
 
         if (!mixerDir.exists() || !mixerDir.isDirectory()) {
-            log.warning("Nie znaleziono folderu ResourcePackManager/mixer/");
+            log.warning("Nie znaleziono folderu " + mixerPath + "/");
             log.warning("Upewnij się że ResourcePackManager jest zainstalowany.");
             return -1;
         }
 
         File[] zips = mixerDir.listFiles((dir, name) -> name.endsWith(".zip"));
         if (zips == null || zips.length == 0) {
-            log.warning("Brak plików ZIP w ResourcePackManager/mixer/");
+            log.warning("Brak plików ZIP w " + mixerPath + "/");
             return -1;
         }
 
-        // Zbierz wszystkie znalezione skiny
         Map<String, SkinCandidate> found = new LinkedHashMap<>();
 
         for (File zip : zips) {
@@ -95,7 +104,6 @@ public class ResourcePackScanner {
             return 0;
         }
 
-        // Dodaj tylko nowe (nie nadpisuj istniejących)
         SkinConfig skinConfig = plugin.getSkinConfig();
         int added = 0;
 
@@ -108,7 +116,6 @@ public class ResourcePackScanner {
                 continue;
             }
 
-            // Zapisz do config.yml
             String path = "skins." + skinId;
             plugin.getConfig().set(path + ".display-name", candidate.displayName);
             plugin.getConfig().set(path + ".item-model", candidate.itemModel);
@@ -134,69 +141,115 @@ public class ResourcePackScanner {
                 ZipEntry entry = entries.nextElement();
                 String name = entry.getName();
 
-                // Szukaj plików items w folderze gear lub display
                 if (!name.endsWith(".json")) continue;
 
-                String skinId = null;
-                String namespace = null;
-                String modelPath = null;
-                boolean isEquipment = false;
+                ParsedSkin parsed = parseEntry(name);
+                if (parsed == null) continue;
 
-                // EliteMobs: assets/elitemobs/items/gear/xxx.json
-                if (name.matches(".*assets/[^/]+/items/gear/[^/]+\\.json")) {
-                    String[] parts = name.split("/");
-                    namespace = parts[parts.length - 4]; // namespace przed /items/
-                    String fileName = parts[parts.length - 1].replace(".json", "");
-
-                    if (shouldIgnore(fileName)) continue;
-
-                    skinId = namespace + "_" + fileName;
-                    modelPath = namespace + ":gear/" + fileName;
-                    isEquipment = fileName.contains("helmet") || fileName.contains("chestplate")
-                        || fileName.contains("leggings") || fileName.contains("boots");
-                }
-                // FMM: assets/freeminecraftmodels/items/display/xxx.json
-                else if (name.matches(".*assets/freeminecraftmodels/items/display/[^/]+\\.json")) {
-                    String[] parts = name.split("/");
-                    String fileName = parts[parts.length - 1].replace(".json", "");
-
-                    if (shouldIgnore(fileName)) continue;
-
-                    namespace = "freeminecraftmodels";
-                    skinId = "fmm_" + fileName;
-                    modelPath = "freeminecraftmodels:display/" + fileName;
-                }
-
-                if (skinId == null || modelPath == null) continue;
-
-                // Dedukuj item-types z nazwy pliku
                 List<String> itemTypes = deduceItemTypes(name.toLowerCase());
-                if (itemTypes.isEmpty()) continue; // Nieznany typ — pomiń
+                if (itemTypes.isEmpty()) continue;
 
-                // Dedukuj equipment-asset dla zbroi
                 String equipmentAsset = "";
-                if (isEquipment && namespace != null) {
-                    // Wyciągnij tier z nazwy (np. "bronze" z "bronze_chestplate")
+                if (parsed.isEquipment()) {
                     String tier = extractTier(name);
                     if (!tier.isEmpty()) {
-                        equipmentAsset = namespace + ":" + tier;
+                        equipmentAsset = parsed.namespace + ":" + tier;
                     }
                 }
 
-                // Generuj display name
-                String displayPrefix = NAMESPACE_DISPLAY.getOrDefault(namespace, namespace);
-                String humanName = toHumanName(skinId.replaceFirst("^[^_]+_", ""));
+                String displayPrefix = resolveNamespaceDisplay(parsed.namespace);
+                String humanName = toHumanName(parsed.humanNamePart);
                 String displayName = "&8[&6" + displayPrefix + "&8] &fToken Skina: " + humanName;
 
-                found.put(skinId, new SkinCandidate(displayName, modelPath, equipmentAsset, itemTypes));
+                found.put(parsed.skinId, new SkinCandidate(displayName, parsed.itemModel, equipmentAsset, itemTypes));
             }
         } catch (IOException e) {
             log.warning("Błąd skanowania " + zipFile.getName() + ": " + e.getMessage());
         }
     }
 
+    private ParsedSkin parseEntry(String path) {
+        // EliteMobs: assets/elitemobs/items/gear/xxx.json
+        if (path.matches(".*assets/[^/]+/items/gear/[^/]+\\.json")) {
+            String[] parts = path.split("/");
+            String namespace = parts[parts.length - 4];
+            String fileName = parts[parts.length - 1].replace(".json", "");
+            if (shouldIgnore(fileName)) return null;
+
+            boolean isEquipment = fileName.contains("helmet") || fileName.contains("chestplate")
+                || fileName.contains("leggings") || fileName.contains("boots");
+            return new ParsedSkin(
+                namespace,
+                namespace + "_" + fileName,
+                namespace + ":gear/" + fileName,
+                isEquipment,
+                fileName
+            );
+        }
+
+        // FMM: assets/freeminecraftmodels/items/display/xxx.json
+        if (path.matches(".*assets/freeminecraftmodels/items/display/[^/]+\\.json")) {
+            String[] parts = path.split("/");
+            String fileName = parts[parts.length - 1].replace(".json", "");
+            if (shouldIgnore(fileName)) return null;
+
+            return new ParsedSkin(
+                "freeminecraftmodels",
+                "fmm_" + fileName,
+                "freeminecraftmodels:display/" + fileName,
+                false,
+                fileName
+            );
+        }
+
+        // MC 1.21.4+ item models: assets/<namespace>/items/<id>.json
+        Matcher generic = GENERIC_ITEM.matcher(path);
+        if (!generic.find()) return null;
+
+        String namespace = generic.group(1).toLowerCase(Locale.ROOT);
+        if (excludedNamespaces.contains(namespace)) return null;
+
+        String fileName = generic.group(2);
+        if (shouldIgnore(fileName)) return null;
+
+        String skinId = fileName.startsWith(namespace + "_")
+            ? fileName
+            : namespace + "_" + fileName;
+        boolean isEquipment = fileName.contains("helmet") || fileName.contains("chestplate")
+            || fileName.contains("leggings") || fileName.contains("boots");
+
+        String humanPart = fileName.startsWith(namespace + "_")
+            ? fileName.substring(namespace.length() + 1)
+            : fileName;
+
+        return new ParsedSkin(
+            namespace,
+            skinId,
+            namespace + ":" + fileName,
+            isEquipment,
+            humanPart
+        );
+    }
+
+    private Set<String> loadExcludedNamespaces() {
+        List<String> fromConfig = plugin.getConfig().getStringList("scanner.excluded-namespaces");
+        List<String> source = fromConfig.isEmpty() ? DEFAULT_EXCLUDED : fromConfig;
+        Set<String> out = new HashSet<>();
+        for (String ns : source) {
+            out.add(ns.toLowerCase(Locale.ROOT));
+        }
+        return out;
+    }
+
+    private String resolveNamespaceDisplay(String namespace) {
+        String custom = plugin.getConfig().getString("scanner.namespace-display." + namespace);
+        if (custom != null && !custom.isBlank()) return custom;
+        if (NAMESPACE_DISPLAY.containsKey(namespace)) return NAMESPACE_DISPLAY.get(namespace);
+        return toHumanName(namespace.replace('_', ' '));
+    }
+
     private boolean shouldIgnore(String fileName) {
-        String lower = fileName.toLowerCase();
+        String lower = fileName.toLowerCase(Locale.ROOT);
         for (String suffix : IGNORE_SUFFIXES) {
             if (lower.endsWith(suffix)) return true;
         }
@@ -215,7 +268,7 @@ public class ResourcePackScanner {
     private String extractTier(String fileName) {
         String[] tiers = {"bronze", "living", "corrupted", "palladium", "ultimatium",
                           "frost_palace", "primis", "dark_cathedral"};
-        String lower = fileName.toLowerCase();
+        String lower = fileName.toLowerCase(Locale.ROOT);
         for (String tier : tiers) {
             if (lower.contains(tier)) return tier;
         }
@@ -223,14 +276,19 @@ public class ResourcePackScanner {
     }
 
     private String toHumanName(String id) {
-        // bronze_sword → Bronze Sword
         return Arrays.stream(id.split("_"))
             .map(w -> w.isEmpty() ? w : Character.toUpperCase(w.charAt(0)) + w.substring(1))
             .reduce((a, b) -> a + " " + b)
             .orElse(id);
     }
 
-    // ── Model danych ─────────────────────────────────────────
+    private record ParsedSkin(
+        String namespace,
+        String skinId,
+        String itemModel,
+        boolean isEquipment,
+        String humanNamePart
+    ) {}
 
     private record SkinCandidate(
         String displayName,

@@ -29,6 +29,9 @@ tiers:
   craftenmine:
     display-name: "&6FMM"
     material: BLAZE_ROD
+  dark_queen:
+    display-name: "&5Dark Queen"
+    material: PURPLE_STAINED_GLASS_PANE
 
 # Special skins shown on the "Unique" tab (comma-separated IDs)
 unique-skins:
@@ -45,6 +48,31 @@ change-token:
     - "&7lub zdjęcia skina."
 
 skin-token-material: PAPER
+
+# ============================================================
+#  Skaner resource packów (/skintoken scan)
+#  Czyta ZIP-y z Resource Pack Manager (mixer/) — nie modyfikuje packów.
+#
+#  Obsługiwane formaty:
+#    - FMM:        assets/freeminecraftmodels/items/display/*.json
+#    - EliteMobs:  assets/<ns>/items/gear/*.json
+#    - Item models MC 1.21.4+ (Dark Queen, MCModels, ItemAdder modern):
+#                  assets/<namespace>/items/*.json
+#
+#  ItemAdder (legacy CustomModelData) NIE jest wspierany — wymaga MC 1.21.4+ item_model.
+#  Pack ItemAdder musi być w mixerze RPM (merge z /iazip). Wyklucz namespace IA poniżej.
+#  Po scanie dodaj tier w sekcji "tiers" (np. dark_queen) jeśli chcesz zakładkę w admin GUI.
+# ============================================================
+scanner:
+  mixer-folder: ResourcePackManager/mixer
+  excluded-namespaces:
+    - freeminecraftmodels   # obsługiwane osobną ścieżką (items/display/)
+    - elitemobs             # obsługiwane osobną ścieżką (items/gear/)
+    - minecraft
+    - _iainternal           # ItemAdder — wewnętrzne assety; dodaj własne namespace IA tutaj
+  namespace-display:
+    dark_queen: "Dark Queen"
+    # myitems: "My Items"
 
 # ============================================================
 #  Definicje skinów
