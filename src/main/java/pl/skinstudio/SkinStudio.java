@@ -1,6 +1,7 @@
 package pl.skinstudio;
 
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import pl.skinstudio.commands.SkinStudioCommand;
 import pl.skinstudio.commands.SkinTokenCommand;
@@ -10,6 +11,13 @@ import pl.skinstudio.gui.AdminChatListener;
 import pl.skinstudio.gui.AdminGUI;
 import pl.skinstudio.gui.SkinStudioGUI;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.logging.Level;
 
 public class SkinStudio extends JavaPlugin {
@@ -41,6 +49,7 @@ public class SkinStudio extends JavaPlugin {
     public void onEnable() {
         instance = this;
         saveDefaultConfig();
+        reloadConfig();
 
         for (String line : BANNER) {
             Bukkit.getConsoleSender().sendMessage(
@@ -70,6 +79,51 @@ public class SkinStudio extends JavaPlugin {
     @Override
     public void onDisable() {
         getLogger().info("SkinStudio disabled.");
+    }
+
+    /** Always UTF-8 — domyślny saveConfig() na Windows potrafi zepsuć polskie znaki. */
+    @Override
+    public void reloadConfig() {
+        File file = new File(getDataFolder(), "config.yml");
+        if (!file.exists()) {
+            saveDefaultConfig();
+        }
+        YamlConfiguration loaded = new YamlConfiguration();
+        try (InputStreamReader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)) {
+            loaded.load(reader);
+        } catch (Exception e) {
+            getLogger().log(Level.SEVERE, "Nie można wczytać config.yml (UTF-8): " + file, e);
+        }
+        InputStream defaults = getResource("config.yml");
+        if (defaults != null) {
+            YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(
+                new InputStreamReader(defaults, StandardCharsets.UTF_8));
+            loaded.setDefaults(defConfig);
+        }
+        loaded.options().copyDefaults(true);
+        assignConfig(loaded);
+    }
+
+    private void assignConfig(YamlConfiguration loaded) {
+        try {
+            Field field = JavaPlugin.class.getDeclaredField("config");
+            field.setAccessible(true);
+            field.set(this, loaded);
+        } catch (ReflectiveOperationException e) {
+            getLogger().log(Level.SEVERE, "Nie można przypisać config.yml po wczytaniu UTF-8", e);
+        }
+    }
+
+    @Override
+    public void saveConfig() {
+        if (getConfig() == null) return;
+        File file = new File(getDataFolder(), "config.yml");
+        file.getParentFile().mkdirs();
+        try {
+            Files.writeString(file.toPath(), getConfig().saveToString(), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            getLogger().log(Level.SEVERE, "Nie można zapisać config.yml (UTF-8): " + file, e);
+        }
     }
 
     public static SkinStudio getInstance() { return instance; }

@@ -115,6 +115,10 @@ public class ResourcePackScanner {
                 log.fine("Pominięto (już istnieje): " + skinId);
                 continue;
             }
+            if (hasItemModel(skinConfig, candidate.itemModel)) {
+                log.fine("Pominięto (ten sam item-model): " + candidate.itemModel);
+                continue;
+            }
 
             String path = "skins." + skinId;
             plugin.getConfig().set(path + ".display-name", candidate.displayName);
@@ -157,7 +161,7 @@ public class ResourcePackScanner {
                     }
                 }
 
-                String displayPrefix = resolveNamespaceDisplay(parsed.namespace);
+                String displayPrefix = resolveDisplayPrefix(parsed, name);
                 String humanName = toHumanName(parsed.humanNamePart);
                 String displayName = "&8[&6" + displayPrefix + "&8] &fToken Skina: " + humanName;
 
@@ -180,10 +184,10 @@ public class ResourcePackScanner {
                 || fileName.contains("leggings") || fileName.contains("boots");
             return new ParsedSkin(
                 namespace,
-                namespace + "_" + fileName,
+                fileName,
                 namespace + ":gear/" + fileName,
                 isEquipment,
-                fileName
+                humanNameFromGear(fileName)
             );
         }
 
@@ -239,6 +243,33 @@ public class ResourcePackScanner {
             out.add(ns.toLowerCase(Locale.ROOT));
         }
         return out;
+    }
+
+    private String resolveDisplayPrefix(ParsedSkin parsed, String path) {
+        String tier = extractTier(path);
+        if (!tier.isEmpty() && "elitemobs".equals(parsed.namespace)) {
+            return toHumanName(tier.replace('_', ' '));
+        }
+        return resolveNamespaceDisplay(parsed.namespace);
+    }
+
+    private static String humanNameFromGear(String fileName) {
+        for (String tier : new String[]{"bronze", "living", "corrupted", "palladium", "ultimatium",
+            "frost_palace", "primis", "dark_cathedral"}) {
+            String prefix = tier + "_";
+            if (fileName.startsWith(prefix)) {
+                return fileName.substring(prefix.length());
+            }
+        }
+        return fileName;
+    }
+
+    private boolean hasItemModel(SkinConfig skinConfig, String itemModel) {
+        if (itemModel == null || itemModel.isEmpty()) return false;
+        for (var skin : skinConfig.getAllSkins().values()) {
+            if (itemModel.equals(skin.getItemModel())) return true;
+        }
+        return false;
     }
 
     private String resolveNamespaceDisplay(String namespace) {
