@@ -1,0 +1,23 @@
+# Maven
+target/
+
+# Build artifacts (CI też buduje JAR; lokalnie w target/)
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# Runtime / dane serwera
+*.db
+logs/
+*.log
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# OS
+Thumbs.db
+Desktop.ini
