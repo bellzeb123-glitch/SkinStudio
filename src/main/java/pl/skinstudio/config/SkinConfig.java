@@ -3,6 +3,7 @@ package pl.skinstudio.config;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import pl.skinstudio.SkinStudio;
+import pl.skinstudio.model.SkinCategory;
 import pl.skinstudio.model.SkinDefinition;
 
 import java.util.ArrayList;
@@ -33,6 +34,8 @@ public class SkinConfig {
 
             String displayName    = s.getString("display-name", "&fToken Skina");
             String itemModel      = s.getString("item-model", "");
+            String sourceItemModel = s.getString("source-item-model", itemModel);
+            String sourceModel = s.getString("source-model", "");
             String equipmentAsset = s.getString("equipment-asset", "");
             List<String> typeNames = s.getStringList("item-types");
 
@@ -43,7 +46,10 @@ public class SkinConfig {
                 else plugin.getLogger().warning("Nieznany materiał '" + typeName + "' w skinie: " + id);
             }
 
-            skins.put(id, new SkinDefinition(id, displayName, itemModel, equipmentAsset, materials));
+            SkinCategory category = SkinCategory.fromConfig(s.getString("category", "unknown"));
+
+            skins.put(id, new SkinDefinition(id, displayName, itemModel, sourceItemModel, sourceModel,
+                equipmentAsset, materials, category));
         }
 
         plugin.getLogger().info("Załadowano " + skins.size() + " definicji skinów.");

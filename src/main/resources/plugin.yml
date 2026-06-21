@@ -1,5 +1,5 @@
 name: SkinStudio
-version: 1.26.1.6
+version: 1.29.0.1
 main: pl.skinstudio.SkinStudio
 api-version: '1.21'
 description: Apply custom model skins to weapons and armor using tokens
@@ -12,7 +12,7 @@ commands:
     aliases: [ss]
   skintoken:
     description: Admin token management commands
-    usage: /skintoken <give|giveremove|list|scan|reload|language>
+    usage: /skintoken <give|giveremove|list|scan|convert|importoraxen|normalize|build|apply|diagnose|reload|language>
     permission: skinstudio.admin
 
 permissions:

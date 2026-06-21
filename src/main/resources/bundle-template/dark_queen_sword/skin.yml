@@ -1,0 +1,24 @@
+# ============================================================
+# Skin Bundle — szablon (skopiuj folder do inbox/<id>/)
+# Jeden folder = jeden skin. Bez zgadywania z całego ZIP sklepu.
+# ============================================================
+
+id: dark_queen_sword
+display-name: "&8[&5Dark Queen&8] &fToken Skina: Miecz"
+tier: dark_queen
+category: weapon
+
+# Materiały, na których działa ten skin:
+item-types:
+  - DIAMOND_SWORD
+  - IRON_SWORD
+  - NETHERITE_SWORD
+
+# Wariant A — pełny pack ItemAdder (plik items/*.json istnieje):
+item-model: dark_queen:dark_queen_sword
+
+# Wariant B — tylko model Blockbench (bez items/*.json) — usuń item-model, odkomentuj:
+# source-model: asura:asura_sword
+
+# Tylko zbroje:
+# equipment-asset: namespace:armor_set

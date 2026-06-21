@@ -50,21 +50,56 @@ change-token:
 skin-token-material: PAPER
 
 # ============================================================
+#  Konwerter skinów — „kupiłem pack → wrzucam → gotowe”
+#  Wrzuć ZIP lub folder z assets/ do inbox/ — reszta automatycznie:
+#    normalizacja → rozpoznanie skinów → config.yml → tier → build pack → RPM reload
+# ============================================================
+converter:
+  enabled: true
+  process-on-startup: true
+  poll-interval-ticks: 200
+  rebuild-after-import: false
+  auto-tier: true
+  isolate-item-models: false
+  include-namespace-assets: true
+  include-iainternal: true
+  bundle-only: true              # tylko foldery z skin.yml (nie całe ZIP-y sklepów)
+  bundle-only-staging: true      # builder czyta wyłącznie *.bundle.zip ze staging
+  clean-legacy-staging-on-bundle: true
+  inbox-folder: inbox
+  staging-folder: staging
+  output-folder: pack
+  processed-folder: processed
+  failed-folder: failed
+
+# ============================================================
 #  Skaner resource packów (/skintoken scan)
-#  Czyta ZIP-y z Resource Pack Manager (mixer/) — nie modyfikuje packów.
+#  Przed skanem automatycznie naprawia typowe błędy kupowanych ZIP-ów:
+#    - backslash w ścieżkach (Windows) → forward slash (wymagane przez MC)
+#    - brak pack.mcmeta → dodaje domyślny (pack-format poniżej)
+#  Po normalizacji SkinStudio przeładowuje RPM automatycznie (fallback: /resourcepackmanager reload).
 #
 #  Obsługiwane formaty:
 #    - FMM:        assets/freeminecraftmodels/items/display/*.json
 #    - EliteMobs:  assets/<ns>/items/gear/*.json
-#    - Item models MC 1.21.4+ (Dark Queen, MCModels, ItemAdder modern):
-#                  assets/<namespace>/items/*.json
+#    - ItemAdder modern (po /iazip + RPM merge):
+#                  assets/<namespace>/items/**/*.json
+#                  assets/<namespace>/equipment/*.json  → equipment-asset (zbroje)
+#    - Inne packi MC 1.21.4+ item_model: assets/<namespace>/items/**/*.json
 #
-#  ItemAdder (legacy CustomModelData) NIE jest wspierany — wymaga MC 1.21.4+ item_model.
-#  Pack ItemAdder musi być w mixerze RPM (merge z /iazip). Wyklucz namespace IA poniżej.
-#  Po scanie dodaj tier w sekcji "tiers" (np. dark_queen) jeśli chcesz zakładkę w admin GUI.
+#  ItemAdder legacy CustomModelData NIE jest wspierany — użyj /iazip (modern) lub konwerter (roadmap).
+#  Pack ItemAdder MUSI być w mixerze RPM. Namespace _iainternal zawsze wykluczony.
 # ============================================================
 scanner:
   mixer-folder: ResourcePackManager/mixer
+  auto-normalize: true          # napraw ZIP-y w mixerze przed skanem (ścieżki + pack.mcmeta)
+  normalize-backup: true        # kopia .zip.bak przy pierwszej normalizacji
+  pack-format: 84               # Purpur/MC 26.1.x (było 46 = tylko 1.21.4 — powodowało szachownicę)
+  auto-rpm-reload: true         # po buildzie: RPM reload (API lub komenda)
+  push-after-reload: true       # po reload RPM: wyślij pack do graczy online (CDN cache)
+  push-delay-ticks: 80          # opóźnienie push (~4s) — RPM musi skończyć upload
+  rpm-reload-command: resourcepackmanager reload
+  auto-build-pack: false        # Oraxen/RPM buduja pack — SkinStudio tylko tokeny
   excluded-namespaces:
     - freeminecraftmodels   # obsługiwane osobną ścieżką (items/display/)
     - elitemobs             # obsługiwane osobną ścieżką (items/gear/)
@@ -699,3 +734,60 @@ skins:
     equipment-asset: ""
     item-types:
       - CROSSBOW
+
+  # ── DARK QUEEN (Oraxen pack) ─────────────────────────────
+  dark_queen_sword:
+    display-name: "&8[&5Dark Queen&8] &fToken Skina: Miecz"
+    source-item-model: dark_queen:dark_queen_sword
+    item-model: dark_queen:dark_queen_sword
+    source-model: ""
+    equipment-asset: ""
+    item-types:
+      - DIAMOND_SWORD
+      - IRON_SWORD
+      - NETHERITE_SWORD
+    category: weapon
+
+  dark_queen_axe:
+    display-name: "&8[&5Dark Queen&8] &fToken Skina: Topor"
+    source-item-model: dark_queen:dark_queen_axe
+    item-model: dark_queen:dark_queen_axe
+    source-model: ""
+    equipment-asset: ""
+    item-types:
+      - DIAMOND_AXE
+      - IRON_AXE
+      - NETHERITE_AXE
+    category: weapon
+
+  dark_queen_bow:
+    display-name: "&8[&5Dark Queen&8] &fToken Skina: Luk"
+    source-item-model: dark_queen:dark_queen_bow
+    item-model: dark_queen:dark_queen_bow
+    source-model: ""
+    equipment-asset: ""
+    item-types:
+      - BOW
+    category: weapon
+
+  dark_queen_spear:
+    display-name: "&8[&5Dark Queen&8] &fToken Skina: Wlocznia"
+    source-item-model: dark_queen:dark_queen_spear
+    item-model: dark_queen:dark_queen_spear
+    source-model: ""
+    equipment-asset: ""
+    item-types:
+      - TRIDENT
+    category: weapon
+
+  dark_queen_staff:
+    display-name: "&8[&5Dark Queen&8] &fToken Skina: Kostur"
+    source-item-model: dark_queen:dark_queen_staff
+    item-model: dark_queen:dark_queen_staff
+    source-model: ""
+    equipment-asset: ""
+    item-types:
+      - DIAMOND_HOE
+      - IRON_HOE
+      - STICK
+    category: weapon
