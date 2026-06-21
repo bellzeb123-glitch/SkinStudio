@@ -1,6 +1,7 @@
 package pl.skinstudio;
 
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import pl.skinstudio.commands.SkinStudioCommand;
@@ -15,7 +16,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.logging.Level;
@@ -40,6 +40,8 @@ public class SkinStudio extends JavaPlugin {
     };
 
     private static SkinStudio instance;
+    /** UTF-8 config — bez refleksji na JavaPlugin.config (Purpur/Paper 26.x). */
+    private YamlConfiguration pluginConfig;
     private SkinConfig skinConfig;
     private LangManager langManager;
     private SkinStudioGUI skinStudioGUI;
@@ -56,6 +58,10 @@ public class SkinStudio extends JavaPlugin {
                 net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
                     .legacyAmpersand().deserialize(line));
         }
+        var c = Bukkit.getConsoleSender();
+        c.sendMessage("§7  Version §f" + getDescription().getVersion() + "  §7│  Author §bBellzeb");
+        c.sendMessage("§7  Status  §7Custom Skins & Tiers");
+        c.sendMessage("§r");
 
         langManager = new LangManager(this);
         skinConfig = new SkinConfig(this);
@@ -101,26 +107,24 @@ public class SkinStudio extends JavaPlugin {
             loaded.setDefaults(defConfig);
         }
         loaded.options().copyDefaults(true);
-        assignConfig(loaded);
+        pluginConfig = loaded;
     }
 
-    private void assignConfig(YamlConfiguration loaded) {
-        try {
-            Field field = JavaPlugin.class.getDeclaredField("config");
-            field.setAccessible(true);
-            field.set(this, loaded);
-        } catch (ReflectiveOperationException e) {
-            getLogger().log(Level.SEVERE, "Nie można przypisać config.yml po wczytaniu UTF-8", e);
+    @Override
+    public FileConfiguration getConfig() {
+        if (pluginConfig == null) {
+            reloadConfig();
         }
+        return pluginConfig;
     }
 
     @Override
     public void saveConfig() {
-        if (getConfig() == null) return;
+        if (pluginConfig == null) return;
         File file = new File(getDataFolder(), "config.yml");
         file.getParentFile().mkdirs();
         try {
-            Files.writeString(file.toPath(), getConfig().saveToString(), StandardCharsets.UTF_8);
+            Files.writeString(file.toPath(), pluginConfig.saveToString(), StandardCharsets.UTF_8);
         } catch (Exception e) {
             getLogger().log(Level.SEVERE, "Nie można zapisać config.yml (UTF-8): " + file, e);
         }
