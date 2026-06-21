@@ -3,7 +3,7 @@ package pl.skinstudio.converter;
 import pl.skinstudio.SkinStudio;
 import pl.skinstudio.pack.SkinPackBuilder;
 import pl.skinstudio.util.ResourcePackScanner;
-import pl.skinstudio.util.RpmBridge;
+import pl.skinstudio.delivery.PackDelivery;
 import pl.skinstudio.util.ScanResult;
 
 import java.io.File;
@@ -149,9 +149,8 @@ public final class SkinConverter {
         }
         log.info("Build OK: " + build.assetsCopied() + " assetów, " + build.skinsIncluded() + " skinów kompletnych");
 
-        if (plugin.getConfig().getBoolean("scanner.auto-rpm-reload", true)) {
-            RpmBridge.reloadMergedPack(plugin);
-        }
+        // Kontekst auto (inbox): respektuje grace startu i hash-guard wewnątrz PackDelivery.
+        PackDelivery.deliver(plugin, false);
         return new FinalizeResult(true, build.assetsCopied(), build.skinsIncluded());
     }
 

@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>pl.skinstudio</groupId>
     <artifactId>SkinStudio</artifactId>
-    <version>1.29.0.1</version>
+    <version>1.30.0.1</version>
     <packaging>jar</packaging>
     <properties>
         <maven.compiler.source>21</maven.compiler.source>

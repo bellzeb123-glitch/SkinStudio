@@ -6,10 +6,13 @@ import pl.skinstudio.SkinStudio;
 import pl.skinstudio.pack.SkinPackBuilder;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -23,17 +26,43 @@ public final class RpmBridge {
 
     private RpmBridge() {}
 
+    /** Kontekst automatyczny (startup / inbox) — respektuje flagę i grace startu. */
+    public static void reloadMergedPack(SkinStudio plugin) {
+        reloadMergedPack(plugin, false);
+    }
+
     /**
      * Bezpieczne z dowolnego wątku — reload przez API (preferowane), fallback na komendę z main thread.
+     * <p>
+     * Optymalizacja (A+C+D):
+     * <ul>
+     *   <li><b>A</b> — {@code force=true} (jawna komenda admina) reloaduje zawsze, pomijając grace i flagę.</li>
+     *   <li><b>C</b> — hash-guard: jeśli {@code pack.zip} bez zmian, pomijamy kosztowny re-mix + upload.</li>
+     *   <li><b>D</b> — po reloadzie auto-push do graczy online (bez rejoina) wg {@code scanner.push-after-reload}.</li>
+     * </ul>
+     *
+     * @param force {@code true} dla jawnej akcji admina; {@code false} dla kontekstu auto (respektuje grace startu).
      */
-    public static void reloadMergedPack(SkinStudio plugin) {
-        if (!plugin.getConfig().getBoolean("scanner.auto-rpm-reload", true)) return;
+    public static void reloadMergedPack(SkinStudio plugin, boolean force) {
         Plugin rpm = Bukkit.getPluginManager().getPlugin(RPM_PLUGIN);
         if (rpm == null || !rpm.isEnabled()) return;
+
+        if (!force) {
+            if (!plugin.getConfig().getBoolean("scanner.auto-rpm-reload", true)) return;
+            if (!plugin.isBootGracePassed()) {
+                plugin.getLogger().info("RPM reload pominięty (start serwera) — RPM zmiksuje SkinStudio sam przy boocie.");
+                return;
+            }
+        }
 
         Runnable reload = () -> {
             ensureRpmEnvironment(plugin);
             registerBuiltPack(plugin);
+
+            if (!packChangedSinceLastReload(plugin)) {
+                plugin.getLogger().info("RPM reload pominięty — pack bez zmian (hash-guard).");
+                return;
+            }
             if (reloadViaApi(plugin)) {
                 schedulePushToPlayers(plugin);
                 return;
@@ -47,6 +76,52 @@ public final class RpmBridge {
         } else {
             Bukkit.getScheduler().runTask(plugin, reload);
         }
+    }
+
+    /**
+     * Surowa dostawa RPM bez boot-grace/hash-guard (te robi {@code PackDelivery}).
+     * MUSI być wołane z głównego wątku.
+     */
+    public static void reloadRaw(SkinStudio plugin) {
+        ensureRpmEnvironment(plugin);
+        registerBuiltPack(plugin);
+        if (reloadViaApi(plugin)) {
+            schedulePushToPlayers(plugin);
+            return;
+        }
+        dispatchReloadCommand(plugin);
+        schedulePushToPlayers(plugin);
+    }
+
+    /** Hash-guard: porównuje SHA-1 zbudowanego packa z ostatnim reloadem. */
+    private static boolean packChangedSinceLastReload(SkinStudio plugin) {
+        try {
+            String outputFolder = plugin.getConfig().getString("converter.output-folder", "pack");
+            File pack = new File(plugin.getDataFolder(), outputFolder + "/" + SkinPackBuilder.OUTPUT_NAME);
+            if (!pack.isFile()) return true; // brak packa → nie blokuj reloadu
+            String hash = sha1(pack);
+            File hashFile = new File(plugin.getDataFolder(), ".last-pack-hash");
+            String prev = hashFile.isFile()
+                ? Files.readString(hashFile.toPath(), StandardCharsets.UTF_8).trim() : "";
+            if (hash.equals(prev)) return false;
+            Files.writeString(hashFile.toPath(), hash, StandardCharsets.UTF_8);
+            return true;
+        } catch (Exception e) {
+            plugin.getLogger().fine("hash-guard: " + e.getMessage() + " — reloaduję mimo to.");
+            return true; // przy błędzie bezpieczniej zreloadować
+        }
+    }
+
+    private static String sha1(File file) throws IOException, java.security.NoSuchAlgorithmException {
+        MessageDigest md = MessageDigest.getInstance("SHA-1");
+        try (InputStream in = new FileInputStream(file)) {
+            byte[] buf = new byte[8192];
+            int read;
+            while ((read = in.read(buf)) != -1) md.update(buf, 0, read);
+        }
+        StringBuilder sb = new StringBuilder();
+        for (byte b : md.digest()) sb.append(String.format("%02x", b));
+        return sb.toString();
     }
 
     /** Wymusza ponowne wysłanie merged packa do graczy online (CDN cache / brak rejoin). */
@@ -138,8 +213,6 @@ public final class RpmBridge {
         }
     }
 
-    private static final String SKINSTUDIO_MIXER_ZIP = "SkinStudio_resource_pack.zip";
-
     private static void cleanPriorityOrder(SkinStudio plugin) {
         File config = new File(plugin.getServer().getPluginsFolder(), "ResourcePackManager/config.yml");
         if (!config.isFile()) return;
@@ -147,41 +220,17 @@ public final class RpmBridge {
             List<String> lines = Files.readAllLines(config.toPath(), StandardCharsets.UTF_8);
             List<String> out = new ArrayList<>();
             boolean changed = false;
-            boolean hasSkinStudioMixer = false;
-            boolean inPriority = false;
             for (String line : lines) {
                 String trimmed = line.trim();
-                if (trimmed.startsWith("priorityOrder:")) {
-                    inPriority = true;
-                    out.add(line);
+                if (trimmed.equals("- SkinStudio-skins.zip") || trimmed.equals("- SkinStudio_resource_pack.zip")) {
+                    changed = true;
                     continue;
-                }
-                if (inPriority && trimmed.startsWith("- ") && !trimmed.startsWith("- #")) {
-                    if (trimmed.equals("- SkinStudio-skins.zip")) {
-                        changed = true;
-                        continue;
-                    }
-                    if (trimmed.equals("- " + SKINSTUDIO_MIXER_ZIP)) {
-                        hasSkinStudioMixer = true;
-                    }
-                    // Koniec listy priorityOrder (następna sekcja top-level bez wcięcia)
-                } else if (inPriority && !trimmed.isEmpty() && !line.startsWith(" ") && !line.startsWith("\t")) {
-                    if (!hasSkinStudioMixer) {
-                        out.add("- " + SKINSTUDIO_MIXER_ZIP);
-                        hasSkinStudioMixer = true;
-                        changed = true;
-                    }
-                    inPriority = false;
                 }
                 out.add(line);
             }
-            if (inPriority && !hasSkinStudioMixer) {
-                out.add("- " + SKINSTUDIO_MIXER_ZIP);
-                changed = true;
-            }
             if (changed) {
                 Files.write(config.toPath(), out, StandardCharsets.UTF_8);
-                plugin.getLogger().info("RPM config: zaktualizowano priorityOrder (SkinStudio mixer zip).");
+                plugin.getLogger().info("RPM config: usunięto martwe wpisy priorityOrder (SkinStudio zip).");
             }
         } catch (IOException e) {
             plugin.getLogger().warning("Nie udało się oczyścić RPM priorityOrder: " + e.getMessage());

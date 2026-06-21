@@ -2,6 +2,7 @@ package pl.skinstudio.util;
 
 import pl.skinstudio.SkinStudio;
 import pl.skinstudio.config.SkinConfig;
+import pl.skinstudio.delivery.PackDelivery;
 import pl.skinstudio.converter.SkinCategoryDetector;
 import pl.skinstudio.model.SkinCategory;
 
@@ -206,7 +207,7 @@ public class ResourcePackScanner {
                 PendingPackApplier.ApplyResult retry = PendingPackApplier.applyAll(
                     plugin.getServer().getPluginsFolder(), mixerPath, log);
                 if (retry.applied() > 0) {
-                    RpmBridge.reloadMergedPack(plugin);
+                    PackDelivery.deliver(plugin, false);
                 }
             }, 60L);
         }
@@ -439,7 +440,7 @@ public class ResourcePackScanner {
         return new ParsedSkin(
             namespace,
             skinId,
-            "skinstudio:" + skinId,
+            namespace + ":" + modelPath,
             namespace + ":" + modelPath,
             isEquipment,
             humanPart

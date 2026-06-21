@@ -15,7 +15,7 @@ import pl.skinstudio.gui.SkinStudioGUI;
 import pl.skinstudio.converter.SkinInboxService;
 import pl.skinstudio.util.BuiltPackWriter;
 import pl.skinstudio.util.PendingPackApplier;
-import pl.skinstudio.util.RpmBridge;
+import pl.skinstudio.delivery.PackDelivery;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -52,10 +52,12 @@ public class SkinStudio extends JavaPlugin {
     private SkinStudioGUI skinStudioGUI;
     private AdminGUI adminGUI;
     private SkinInboxService inboxService;
+    private long enableTimeMs;
 
     @Override
     public void onEnable() {
         instance = this;
+        enableTimeMs = System.currentTimeMillis();
         saveDefaultConfig();
         saveBundleTemplate();
         reloadConfig();
@@ -89,6 +91,10 @@ public class SkinStudio extends JavaPlugin {
         inboxService = new SkinInboxService(this);
         inboxService.start();
 
+        new pl.skinstudio.converter.OraxenImporter(this).ensureSourceFolder();
+
+        PackDelivery.init(this);
+
         applyPendingFixedPacksOnStartup();
 
         getLogger().info("v" + getDescription().getVersion() + " | Language: "
@@ -101,6 +107,7 @@ public class SkinStudio extends JavaPlugin {
     @Override
     public void onDisable() {
         if (inboxService != null) inboxService.stop();
+        PackDelivery.shutdown();
         SkinStudioAPIProvider.unregister();
         getLogger().info("SkinStudio disabled.");
     }
@@ -148,6 +155,16 @@ public class SkinStudio extends JavaPlugin {
         }
     }
 
+    /**
+     * Czy minął okres "łaski startowej" — RPM sam miksuje SkinStudio przy boocie (compatible_plugins),
+     * więc automatyczny reload z naszej strony w trakcie startu tylko psuje mix (race z bootem RPM/BellMarket).
+     * Reload z naszej strony ma sens dopiero po starcie (zmiana packa na żywym serwerze).
+     */
+    public boolean isBootGracePassed() {
+        long graceMs = getConfig().getLong("scanner.boot-grace-seconds", 90) * 1000L;
+        return System.currentTimeMillis() - enableTimeMs > graceMs;
+    }
+
     public static SkinStudio getInstance() { return instance; }
     public SkinConfig getSkinConfig() { return skinConfig; }
     public LangManager getLang() { return langManager; }
@@ -172,7 +189,7 @@ public class SkinStudio extends JavaPlugin {
                     if (built.applied() > 0) {
                         getLogger().info("Auto-podmieniono pending SkinStudio-skins.zip w mixer.");
                     }
-                    RpmBridge.reloadMergedPack(this);
+                    PackDelivery.deliver(this, false);
                 });
             }
         }, 40L);

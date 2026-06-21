@@ -17,7 +17,7 @@ import pl.skinstudio.util.PendingPackApplier;
 import pl.skinstudio.util.BuiltPackWriter;
 import pl.skinstudio.util.ResourcePackDiagnostics;
 import pl.skinstudio.util.ResourcePackScanner;
-import pl.skinstudio.util.RpmBridge;
+import pl.skinstudio.delivery.PackDelivery;
 import pl.skinstudio.util.ScanResult;
 import pl.skinstudio.util.TokenUtil;
 
@@ -75,8 +75,7 @@ public class SkinTokenCommand implements CommandExecutor, TabCompleter {
             case "repush" -> {
                 sender.sendMessage(lang().component("command.repush-start"));
                 Bukkit.getScheduler().runTask(plugin, () -> {
-                    RpmBridge.ensureRpmEnvironment(plugin);
-                    RpmBridge.reloadMergedPack(plugin);
+                    PackDelivery.redeliver(plugin);
                     sender.sendMessage(lang().component("command.repush-done"));
                 });
             }
@@ -165,7 +164,7 @@ public class SkinTokenCommand implements CommandExecutor, TabCompleter {
                         if (result.packsNormalized() > 0) {
                             sender.sendMessage(lang().component("command.scan-normalized",
                                 "count", result.packsNormalized()));
-                            RpmBridge.reloadMergedPack(plugin);
+                            PackDelivery.deliver(plugin, true);
                         }
                         if (result.skinsAdded() > 0) {
                             sender.sendMessage(lang().component("command.scan-added",
@@ -204,7 +203,7 @@ public class SkinTokenCommand implements CommandExecutor, TabCompleter {
                         if (report.changed() > 0) {
                             sender.sendMessage(lang().component("command.scan-normalized",
                                 "count", report.changed()));
-                            RpmBridge.reloadMergedPack(plugin);
+                            PackDelivery.deliver(plugin, true);
                             sender.sendMessage(lang().component("command.scan-normalized-reload"));
                         } else if (!report.pendingFiles().isEmpty()) {
                             sender.sendMessage(lang().component("command.normalize-pending-hint"));
@@ -238,7 +237,7 @@ public class SkinTokenCommand implements CommandExecutor, TabCompleter {
                         int total = result.applied() + built.applied();
                         if (total > 0) {
                             sender.sendMessage(lang().component("command.apply-done", "count", total));
-                            RpmBridge.reloadMergedPack(plugin);
+                            PackDelivery.deliver(plugin, true);
                             sender.sendMessage(lang().component("command.scan-normalized-reload"));
                         } else if (!result.failed().isEmpty()) {
                             sender.sendMessage(lang().component("command.apply-failed"));
@@ -315,7 +314,7 @@ public class SkinTokenCommand implements CommandExecutor, TabCompleter {
                                 for (String m : missing) sender.sendMessage(colorize("&8    - &7" + m));
                             });
                         }
-                        RpmBridge.reloadMergedPack(plugin);
+                        PackDelivery.deliver(plugin, true);
                         sender.sendMessage(lang().component("command.scan-normalized-reload"));
                     });
                 });
@@ -356,9 +355,10 @@ public class SkinTokenCommand implements CommandExecutor, TabCompleter {
             }
 
             case "importoraxen" -> {
-                String nsFilter = args.length >= 2 ? args[1] : "dark_queen";
+                String nsFilter = args.length >= 2 ? args[1] : "all";
                 boolean overwrite = args.length < 3 || !args[2].equalsIgnoreCase("skip");
-                sender.sendMessage(colorize("&7Oraxen import: namespace=&f" + nsFilter
+                sender.sendMessage(colorize("&7Import: namespace=&f"
+                    + ("all".equalsIgnoreCase(nsFilter) ? "wszystkie" : nsFilter)
                     + " &7overwrite=&f" + overwrite));
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                     var importer = new pl.skinstudio.converter.OraxenImporter(plugin);
@@ -372,13 +372,13 @@ public class SkinTokenCommand implements CommandExecutor, TabCompleter {
                             }
                             return;
                         }
-                        sender.sendMessage(colorize("&aOraxen import OK &7(źródło: &f" + result.packSource() + "&7)"));
+                        sender.sendMessage(colorize("&aImport OK &7(źródło: &f" + result.packSource() + "&7)"));
                         sender.sendMessage(colorize("&7  dodano: &f" + result.added()
                             + " &7| zaktualizowano: &f" + result.updated()
                             + " &7| pominięto: &f" + result.skipped()));
                         if (packAction > 0) {
                             sender.sendMessage(colorize("&7  skopiowano &f" + packAction
-                                + " &7assetów Oraxen → SkinStudio/pack (RPM merge)"));
+                                + " &7assetów → SkinStudio/pack"));
                         }
                         if (result.textureWarnings() > 0) {
                             sender.sendMessage(colorize("&e  Ostrzeżenie PNG: &f" + result.textureWarnings()
@@ -390,8 +390,10 @@ public class SkinTokenCommand implements CommandExecutor, TabCompleter {
                         for (String w : result.warnings()) {
                             sender.sendMessage(colorize("&e  " + w));
                         }
-                        RpmBridge.reloadMergedPack(plugin);
-                        sender.sendMessage(colorize("&7RPM reload — wyjdź i wejdź, potem &f/skintoken giveitem @s dark_queen_axe"));
+                        PackDelivery.deliver(plugin, true);
+                        sender.sendMessage(colorize("&aDostawa packa (&f" + PackDelivery.activeProviderName()
+                            + "&a) + push do graczy online."));
+                        sender.sendMessage(colorize("&7Gdy pack się wgra — jeśli skin się nie pojawił, wyjdź i wejdź."));
                     });
                 });
             }
@@ -421,7 +423,8 @@ public class SkinTokenCommand implements CommandExecutor, TabCompleter {
         } else if (args.length == 3 && (args[0].equalsIgnoreCase("give") || args[0].equalsIgnoreCase("giveitem"))) {
             completions.addAll(plugin.getSkinConfig().getAllSkins().keySet());
         } else if (args.length == 2 && args[0].equalsIgnoreCase("importoraxen")) {
-            completions.addAll(List.of("dark_queen", "all"));
+            completions.add("all");
+            completions.addAll(new pl.skinstudio.converter.OraxenImporter(plugin).listSourceNamespaces());
         } else if (args.length == 2 && args[0].equalsIgnoreCase("prepare")) {
             completions.addAll(plugin.getSkinConfig().getAllSkins().keySet());
         } else if (args.length == 2 && args[0].equalsIgnoreCase("diagnose")) {
@@ -498,7 +501,7 @@ public class SkinTokenCommand implements CommandExecutor, TabCompleter {
                 if (report.success()) {
                     sender.sendMessage(lang().component("command.build-done",
                         "skins", report.skinsIncluded(), "assets", report.assetsCopied()));
-                    RpmBridge.reloadMergedPack(plugin);
+                    PackDelivery.deliver(plugin, true);
                     sender.sendMessage(lang().component("command.scan-normalized-reload"));
                 } else {
                     sender.sendMessage(lang().component("command.build-failed", "error",

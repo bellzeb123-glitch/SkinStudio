@@ -6,6 +6,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import pl.skinstudio.SkinStudio;
 import pl.skinstudio.pack.AssetResolver;
 import pl.skinstudio.pack.PackIndex;
+import pl.skinstudio.util.AtlasPatchUtil;
 import pl.skinstudio.util.ResourcePackScanner;
 
 import java.io.File;
@@ -17,7 +18,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -129,10 +129,10 @@ public final class OraxenImporter {
         return new ImportResult(added, updated, skipped, textureWarnings, skinIds, warnings, packZip.getName());
     }
 
-    /** Kopiuje assety namespace z Oraxen/pack/pack.zip do SkinStudio/pack/pack.zip (RPM czyta SkinStudio). */
+    /** Kopiuje assety namespace ze źródła (SkinStudio/source lub Oraxen/pack) do SkinStudio/pack/pack.zip (RPM czyta SkinStudio). */
     public int syncOraxenAssetsToSkinStudioPack(String namespace) {
-        File oraxenPack = new File(Bukkit.getServer().getPluginsFolder(), "Oraxen/pack/pack.zip");
-        if (!oraxenPack.isFile()) return 0;
+        File oraxenPack = resolveOraxenPack();
+        if (oraxenPack == null || !oraxenPack.isFile()) return 0;
 
         String prefix = "assets/" + (namespace == null || namespace.isBlank() || "all".equalsIgnoreCase(namespace)
             ? "" : namespace.toLowerCase(Locale.ROOT) + "/");
@@ -150,6 +150,8 @@ public final class OraxenImporter {
             log.warning("syncOraxenAssetsToSkinStudioPack read: " + ex.getMessage());
             return 0;
         }
+
+        AtlasPatchUtil.patchPackAtlases(merged);
 
         int format = plugin.getConfig().getInt("scanner.pack-format", 84);
         merged.put("pack.mcmeta", ("{\"pack\":{\"pack_format\":" + format
@@ -177,7 +179,7 @@ public final class OraxenImporter {
         }
 
         int copied = (int) merged.keySet().stream().filter(k -> k.startsWith("assets/")).count();
-        log.info("Skopiowano assety Oraxen → SkinStudio/pack/pack.zip (" + copied + " plików)");
+        log.info("Skopiowano assety źródłowe → SkinStudio/pack/pack.zip (" + copied + " plików)");
         return copied;
     }
 
@@ -311,28 +313,97 @@ public final class OraxenImporter {
         return bad;
     }
 
+    /** Namespace'y wykryte w źródłach (SkinStudio/source/assets + Oraxen/pack/assets) — do tab-completion. */
+    public java.util.List<String> listSourceNamespaces() {
+        java.util.Set<String> namespaces = new java.util.TreeSet<>();
+        collectNamespaces(new File(sourceDir(), "assets"), namespaces);
+        collectNamespaces(new File(Bukkit.getServer().getPluginsFolder(), "Oraxen/pack/assets"), namespaces);
+        namespaces.removeAll(DEFAULT_SKIP);
+        return new ArrayList<>(namespaces);
+    }
+
+    private static void collectNamespaces(File assetsDir, java.util.Set<String> out) {
+        if (!assetsDir.isDirectory()) return;
+        File[] dirs = assetsDir.listFiles(File::isDirectory);
+        if (dirs == null) return;
+        for (File d : dirs) out.add(d.getName().toLowerCase(Locale.ROOT));
+    }
+
+    /** Własny folder źródłowy SkinStudio — auto-tworzony przy starcie. Tu admin wrzuca assets/<ns>/... */
+    public File sourceDir() {
+        String folder = plugin.getConfig().getString("converter.source-folder", "source");
+        return new File(plugin.getDataFolder(), folder);
+    }
+
+    /**
+     * Zakłada folder źródłowy SkinStudio z krótkim README, jeśli go nie ma.
+     * Wołane przy starcie pluginu, więc admin nie musi ręcznie tworzyć ścieżek.
+     */
+    public void ensureSourceFolder() {
+        File src = sourceDir();
+        File assets = new File(src, "assets");
+        assets.mkdirs();
+        File readme = new File(src, "README.txt");
+        if (!readme.isFile()) {
+            String text = "SkinStudio — folder zrodlowy assetow\n"
+                + "====================================\n\n"
+                + "Wrzuc tutaj assety w formacie resource packa, np.:\n"
+                + "  source/assets/<namespace>/items/<id>.json\n"
+                + "  source/assets/<namespace>/models/<namespace>/<model>.json\n"
+                + "  source/assets/<namespace>/textures/<namespace>/<tekstura>.png\n\n"
+                + "Mozesz tez wrzucic gotowy pack:  source/pack.zip\n\n"
+                + "Potem w grze:  /skintoken importoraxen <namespace>\n"
+                + "SkinStudio zarejestruje skiny, skopiuje assety do swojego packa\n"
+                + "i automatycznie dopisze atlas (items.json). Plugin Oraxen NIE jest wymagany.\n";
+            try {
+                Files.writeString(readme.toPath(), text, java.nio.charset.StandardCharsets.UTF_8);
+            } catch (IOException ignored) {
+                // README to wygoda — brak nie blokuje importu
+            }
+        }
+    }
+
+    /**
+     * Rozwiązuje źródło assetów w kolejności:
+     *   1. SkinStudio/source/pack.zip
+     *   2. SkinStudio/source/assets/  → spakowane do tymczasowego zip
+     *   3. Oraxen/pack/pack.zip  (gdy ktoś realnie używa Oraxena)
+     *   4. Oraxen/pack/assets/   → spakowane
+     *   5. fallback dev (pulpit)
+     */
     private File resolveOraxenPack() {
         File plugins = Bukkit.getServer().getPluginsFolder();
+
+        File ownPackZip = new File(sourceDir(), "pack.zip");
+        if (ownPackZip.isFile() && ownPackZip.length() > 0) return ownPackZip;
+
+        File ownZip = zipAssetsRootIfPresent(sourceDir(), "skinstudio-source-temp.zip");
+        if (ownZip != null) return ownZip;
+
         File oraxenPack = new File(plugins, "Oraxen/pack/pack.zip");
         if (oraxenPack.isFile() && oraxenPack.length() > 0) return oraxenPack;
 
-        // Pack jeszcze nie zbudowany — złóż tymczasowy ZIP z folderu assets/
-        File assetsRoot = new File(plugins, "Oraxen/pack");
-        File assetsDir = new File(assetsRoot, "assets");
-        if (!assetsDir.isDirectory()) {
-            // Fallback: sklep na pulpicie (dev / pierwszy setup)
-            File desktop = new File("C:/Users/user/Desktop/textures/Dark_Queen.zip");
-            if (desktop.isFile()) return desktop;
-            return null;
-        }
+        File oraxenZip = zipAssetsRootIfPresent(new File(plugins, "Oraxen/pack"), "oraxen-scan-temp.zip");
+        if (oraxenZip != null) return oraxenZip;
 
-        File temp = new File(plugin.getDataFolder(), "staging/oraxen-scan-temp.zip");
+        // Fallback: sklep na pulpicie (dev / pierwszy setup)
+        File desktop = new File("C:/Users/user/Desktop/textures/Dark_Queen.zip");
+        if (desktop.isFile()) return desktop;
+        return null;
+    }
+
+    /** Pakuje {@code <root>/assets/...} do tymczasowego zip w staging. Zwraca null gdy brak assets/. */
+    private File zipAssetsRootIfPresent(File assetsRoot, String tempName) {
+        File assetsDir = new File(assetsRoot, "assets");
+        if (!assetsDir.isDirectory()) return null;
+
+        File temp = new File(plugin.getDataFolder(), "staging/" + tempName);
         temp.getParentFile().mkdirs();
         try {
             zipFolder(assetsRoot, temp);
             return temp.isFile() && temp.length() > 0 ? temp : null;
         } catch (IOException e) {
-            log.warning("OraxenImporter temp zip: " + e.getMessage());
+            log.warning("OraxenImporter temp zip (" + tempName + "): " + e.getMessage());
             return null;
         }
     }

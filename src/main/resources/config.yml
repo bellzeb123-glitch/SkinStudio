@@ -29,9 +29,6 @@ tiers:
   craftenmine:
     display-name: "&6FMM"
     material: BLAZE_ROD
-  dark_queen:
-    display-name: "&5Dark Queen"
-    material: PURPLE_STAINED_GLASS_PANE
 
 # Special skins shown on the "Unique" tab (comma-separated IDs)
 unique-skins:
@@ -71,6 +68,10 @@ converter:
   output-folder: pack
   processed-folder: processed
   failed-folder: failed
+  # Wlasny folder zrodlowy SkinStudio (auto-tworzony przy starcie).
+  # Wrzuc tu assets/<namespace>/... lub pack.zip, potem /skintoken importoraxen <namespace>.
+  # Plugin Oraxen NIE jest wymagany — to tylko alternatywa dla folderu Oraxen/pack.
+  source-folder: source
 
 # ============================================================
 #  Skaner resource packów (/skintoken scan)
@@ -90,14 +91,43 @@ converter:
 #  ItemAdder legacy CustomModelData NIE jest wspierany — użyj /iazip (modern) lub konwerter (roadmap).
 #  Pack ItemAdder MUSI być w mixerze RPM. Namespace _iainternal zawsze wykluczony.
 # ============================================================
+#  Dostawa packa do graczy (provider abstraction)
+#  mode:
+#    auto     — RPM jeśli zainstalowany, inaczej self-host (zalecane)
+#    rpm      — wymuś ResourcePackManager
+#    selfhost — wbudowany serwer HTTP + push przez Paper (bez RPM)
+#    external — kopiuj pack.zip do innego mergera (output-path)
+#    none     — nie dostarczaj (buduj tylko pack.zip)
+# ============================================================
+delivery:
+  enabled: true
+  mode: auto
+  selfhost:
+    port: 25567
+    # publiczny host/IP którym klient sięga do serwera; puste = auto-detekcja (ustaw dla zdalnych graczy)
+    public-host: ''
+    prompt: "Resource pack: custom skiny"
+    force: false               # true = wymuś akceptację (gracz odrzucający = kick)
+  external:
+    # tryb external: dokąd skopiować pack.zip (ścieżka względna od /plugins lub bezwzględna). Puste = wyłączone.
+    output-path: ''
+
+# ============================================================
 scanner:
   mixer-folder: ResourcePackManager/mixer
   auto-normalize: true          # napraw ZIP-y w mixerze przed skanem (ścieżki + pack.mcmeta)
   normalize-backup: true        # kopia .zip.bak przy pierwszej normalizacji
   pack-format: 84               # Purpur/MC 26.1.x (było 46 = tylko 1.21.4 — powodowało szachownicę)
-  auto-rpm-reload: true         # po buildzie: RPM reload (API lub komenda)
-  push-after-reload: true       # po reload RPM: wyślij pack do graczy online (CDN cache)
-  push-delay-ticks: 80          # opóźnienie push (~4s) — RPM musi skończyć upload
+  # Auto reload RPM po realnej zmianie packa. Jawne komendy (/skintoken importoraxen, scan, build)
+  # reloadują ZAWSZE; konteksty auto (inbox) respektują boot-grace poniżej. Hash-guard pomija
+  # reload gdy pack bez zmian, więc true jest bezpieczne i tanie.
+  auto-rpm-reload: true
+  # Po reloadzie auto-push merged packa do graczy online (bez rejoina).
+  push-after-reload: true
+  # Okres "łaski startowej" (s): w tym czasie po starcie NIE reloadujemy RPM z kontekstu auto —
+  # RPM sam miksuje SkinStudio przy boocie (compatible_plugins), więc reload tylko psułby mix.
+  boot-grace-seconds: 90
+  push-delay-ticks: 240         # ~12s — RPM upload na magmaguy.com trwa 5–10s po mixie
   rpm-reload-command: resourcepackmanager reload
   auto-build-pack: false        # Oraxen/RPM buduja pack — SkinStudio tylko tokeny
   excluded-namespaces:
@@ -106,7 +136,6 @@ scanner:
     - minecraft
     - _iainternal           # ItemAdder — wewnętrzne assety; dodaj własne namespace IA tutaj
   namespace-display:
-    dark_queen: "Dark Queen"
     # myitems: "My Items"
 
 # ============================================================
@@ -734,60 +763,3 @@ skins:
     equipment-asset: ""
     item-types:
       - CROSSBOW
-
-  # ── DARK QUEEN (Oraxen pack) ─────────────────────────────
-  dark_queen_sword:
-    display-name: "&8[&5Dark Queen&8] &fToken Skina: Miecz"
-    source-item-model: dark_queen:dark_queen_sword
-    item-model: dark_queen:dark_queen_sword
-    source-model: ""
-    equipment-asset: ""
-    item-types:
-      - DIAMOND_SWORD
-      - IRON_SWORD
-      - NETHERITE_SWORD
-    category: weapon
-
-  dark_queen_axe:
-    display-name: "&8[&5Dark Queen&8] &fToken Skina: Topor"
-    source-item-model: dark_queen:dark_queen_axe
-    item-model: dark_queen:dark_queen_axe
-    source-model: ""
-    equipment-asset: ""
-    item-types:
-      - DIAMOND_AXE
-      - IRON_AXE
-      - NETHERITE_AXE
-    category: weapon
-
-  dark_queen_bow:
-    display-name: "&8[&5Dark Queen&8] &fToken Skina: Luk"
-    source-item-model: dark_queen:dark_queen_bow
-    item-model: dark_queen:dark_queen_bow
-    source-model: ""
-    equipment-asset: ""
-    item-types:
-      - BOW
-    category: weapon
-
-  dark_queen_spear:
-    display-name: "&8[&5Dark Queen&8] &fToken Skina: Wlocznia"
-    source-item-model: dark_queen:dark_queen_spear
-    item-model: dark_queen:dark_queen_spear
-    source-model: ""
-    equipment-asset: ""
-    item-types:
-      - TRIDENT
-    category: weapon
-
-  dark_queen_staff:
-    display-name: "&8[&5Dark Queen&8] &fToken Skina: Kostur"
-    source-item-model: dark_queen:dark_queen_staff
-    item-model: dark_queen:dark_queen_staff
-    source-model: ""
-    equipment-asset: ""
-    item-types:
-      - DIAMOND_HOE
-      - IRON_HOE
-      - STICK
-    category: weapon

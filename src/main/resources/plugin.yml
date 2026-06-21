@@ -1,5 +1,5 @@
 name: SkinStudio
-version: 1.29.0.1
+version: 1.30.0.1
 main: pl.skinstudio.SkinStudio
 api-version: '1.21'
 description: Apply custom model skins to weapons and armor using tokens

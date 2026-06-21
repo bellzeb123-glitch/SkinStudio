@@ -3,6 +3,7 @@ package pl.skinstudio.pack;
 import pl.skinstudio.SkinStudio;
 import pl.skinstudio.converter.SkinConverter;
 import pl.skinstudio.model.SkinDefinition;
+import pl.skinstudio.util.AtlasPatchUtil;
 import pl.skinstudio.util.BuiltPackWriter;
 import pl.skinstudio.util.PackMcmetaUtil;
 
@@ -121,6 +122,8 @@ public final class SkinPackBuilder {
         if (toWrite.isEmpty()) {
             return BuildReport.error("Nie znaleziono żadnych kompletnych assetów do zbudowania packa.");
         }
+
+        AtlasPatchUtil.patchPackAtlases(toWrite);
 
         int packFormat = plugin.getConfig().getInt("scanner.pack-format", 84);
         toWrite.put("pack.mcmeta", PackMcmetaUtil.builtMcmeta(packFormat)
