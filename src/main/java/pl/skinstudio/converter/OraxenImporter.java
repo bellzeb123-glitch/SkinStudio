@@ -119,9 +119,7 @@ public final class OraxenImporter {
 
         if (added > 0 || updated > 0) {
             plugin.saveConfig();
-            plugin.reloadConfig();
-            plugin.getSkinConfig().load();
-            plugin.getAdminGUI().loadTiers();
+            plugin.reloadSkinCatalog();
         }
 
         log.info("Oraxen import: +" + added + " ~" + updated + " pominięto " + skipped

@@ -169,8 +169,7 @@ public class SkinTokenCommand implements CommandExecutor, TabCompleter {
                         if (result.skinsAdded() > 0) {
                             sender.sendMessage(lang().component("command.scan-added",
                                 "count", result.skinsAdded()));
-                            plugin.reloadConfig();
-                            plugin.getSkinConfig().load();
+                            plugin.reloadSkinCatalog();
                             sender.sendMessage(lang().component("command.scan-reloaded"));
                             if (plugin.getConfig().getBoolean("scanner.auto-build-pack", true)) {
                                 autoBuildPack(sender);
@@ -399,10 +398,8 @@ public class SkinTokenCommand implements CommandExecutor, TabCompleter {
             }
 
             case "reload" -> {
-                plugin.reloadConfig();
-                plugin.getSkinConfig().load();
+                plugin.reloadSkinCatalog();
                 plugin.getLang().reload();
-                plugin.getAdminGUI().loadTiers();
                 sender.sendMessage(lang().component("command.reloaded",
                     "count", plugin.getSkinConfig().getAllSkins().size()));
             }

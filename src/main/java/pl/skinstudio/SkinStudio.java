@@ -112,6 +112,16 @@ public class SkinStudio extends JavaPlugin {
         getLogger().info("SkinStudio disabled.");
     }
 
+    public void reloadSkinCatalog() {
+        reloadConfig();
+        skinConfig.load();
+        if (adminGUI != null) {
+            adminGUI.loadTiers();
+        }
+        int count = skinConfig.getAllSkins().size();
+        Bukkit.getPluginManager().callEvent(new pl.skinstudio.api.SkinStudioCatalogReloadEvent(this, count));
+    }
+
     /** Always UTF-8 — domyślny saveConfig() na Windows potrafi zepsuć polskie znaki. */
     @Override
     public void reloadConfig() {
