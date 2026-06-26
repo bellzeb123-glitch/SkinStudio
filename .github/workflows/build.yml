@@ -19,8 +19,12 @@ jobs:
 
       - name: Install bell-hub-api
         run: |
-          git clone --depth 1 https://github.com/bellzeb123-glitch/bell-hub-api.git /tmp/bell-hub-api
-          mvn -f /tmp/bell-hub-api/pom.xml install -DskipTests -B -q
+          if git clone --depth 1 https://github.com/bellzeb123-glitch/bell-hub-api.git /tmp/bell-hub-api 2>/dev/null; then
+            mvn -f /tmp/bell-hub-api/pom.xml install -DskipTests -B -q
+          else
+            git clone --depth 1 https://github.com/bellzeb123-glitch/BellHub.git /tmp/bellhub
+            mvn -f /tmp/bellhub/bell-hub-api/pom.xml install -DskipTests -B -q
+          fi
 
       - name: Build with Maven
         run: mvn package -q
