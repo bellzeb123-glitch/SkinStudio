@@ -95,6 +95,15 @@ public class SkinStudio extends JavaPlugin {
 
         PackDelivery.init(this);
 
+        if (getServer().getPluginManager().getPlugin("BellHub") != null) {
+            try {
+                pl.skinstudio.integration.BellHubModule.register(this);
+                getLogger().info("BellHub module registered (skinstudio).");
+            } catch (Throwable t) {
+                getLogger().warning("BellHub registration failed: " + t.getMessage());
+            }
+        }
+
         applyPendingFixedPacksOnStartup();
 
         getLogger().info("v" + getDescription().getVersion() + " | Language: "

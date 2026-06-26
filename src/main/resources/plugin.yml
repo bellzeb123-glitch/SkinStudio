@@ -3,6 +3,7 @@ version: 1.26.1.2
 main: pl.skinstudio.SkinStudio
 api-version: '1.21'
 description: Apply custom model skins to weapons and armor using tokens
+softdepend: [BellHub]
 
 commands:
   skinstudio:
@@ -21,4 +22,7 @@ permissions:
     default: true
   skinstudio.admin:
     description: Allows using /skinstudio admin and /skintoken
+    default: op
+  bellhub.module.skinstudio:
+    description: BellHub panel — SkinStudio module
     default: op
