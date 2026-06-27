@@ -48,11 +48,25 @@ public class AdminGUI implements Listener {
     private static final String NBT_IS_CHANGE = "ss_is_change";
     private static final String NBT_TAB_ID    = "ss_tab_id";
     private static final String NBT_LANGUAGE  = "ss_language_toggle";
+    private static final String NBT_TAB_PAGE  = "ss_tab_page_nav";
+    private static final String NBT_SKIN_PAGE = "ss_skin_page_nav";
 
     private static final int GUI_SIZE = 54;
+    /** Zakładki: sloty 0–6 (7 widocznych), 7 = poprzednia strona, 8 = następna. */
+    private static final int TAB_SLOTS = 7;
+    private static final int SLOT_TAB_PREV = 7;
+    private static final int SLOT_TAB_NEXT = 8;
+    /** Skiny: sloty 9–44, nawigacja w 45 i 53. */
+    private static final int SKIN_SLOT_START = 9;
+    private static final int SKIN_SLOT_END = 44;
+    private static final int SKINS_PER_PAGE = SKIN_SLOT_END - SKIN_SLOT_START + 1;
+    private static final int SLOT_SKIN_PREV = 45;
+    private static final int SLOT_SKIN_NEXT = 53;
 
     private final SkinStudio plugin;
     private final Map<UUID, String> currentTab     = new HashMap<>();
+    private final Map<UUID, Integer> tabPage         = new HashMap<>();
+    private final Map<UUID, Integer> skinPage        = new HashMap<>();
     private final Map<UUID, String> awaitingAmount = new HashMap<>();
     private List<TierDef> tiers = new ArrayList<>();
 
@@ -87,57 +101,122 @@ public class AdminGUI implements Listener {
     }
 
     private void openTab(Player player, String tabId) {
-        currentTab.put(player.getUniqueId(), tabId);
+        openTab(player, tabId, tabPageFor(player.getUniqueId(), tabId), skinPage.getOrDefault(player.getUniqueId(), 0));
+    }
+
+    private void openTab(Player player, String tabId, int tabPg, int skinPg) {
+        UUID uid = player.getUniqueId();
+        currentTab.put(uid, tabId);
+        tabPage.put(uid, tabPg);
+        skinPage.put(uid, skinPg);
 
         SkinAdminHolder holder = new SkinAdminHolder(tabId);
         Inventory inv = Bukkit.createInventory(holder, GUI_SIZE,
             lang().raw("admin.title"));
         holder.setInventory(inv);
 
-        buildGui(inv, tabId);
+        buildGui(inv, tabId, tabPg, skinPg);
         player.openInventory(inv);
     }
 
-    private void buildGui(Inventory inv, String activeTabId) {
+    private int tabPageFor(UUID uid, String activeTabId) {
+        List<String> allTabIds = allTabIds();
+        int idx = allTabIds.indexOf(activeTabId);
+        int current = tabPage.getOrDefault(uid, 0);
+        if (idx < 0) return 0;
+        int maxPage = Math.max(0, (allTabIds.size() - 1) / TAB_SLOTS);
+        if (idx < current * TAB_SLOTS || idx >= (current + 1) * TAB_SLOTS) {
+            return idx / TAB_SLOTS;
+        }
+        return Math.min(current, maxPage);
+    }
+
+    private List<String> allTabIds() {
+        List<String> ids = new ArrayList<>();
+        for (TierDef t : tiers) ids.add(t.id);
+        ids.add(TAB_UNIQUE);
+        ids.add(TAB_TOKENS);
+        return ids;
+    }
+
+    private void buildGui(Inventory inv, String activeTabId, int tabPg, int skinPg) {
         for (int i = 0; i < GUI_SIZE; i++)
             inv.setItem(i, glass(Material.GRAY_STAINED_GLASS_PANE));
 
-        List<String> allTabIds = new ArrayList<>();
-        for (TierDef t : tiers) allTabIds.add(t.id);
-        allTabIds.add(TAB_UNIQUE);
-        allTabIds.add(TAB_TOKENS);
+        List<String> allTabIds = allTabIds();
+        int maxTabPage = Math.max(0, (allTabIds.size() - 1) / TAB_SLOTS);
+        tabPg = Math.max(0, Math.min(tabPg, maxTabPage));
 
-        int maxTabs = 9;
-        for (int i = 0; i < Math.min(allTabIds.size(), maxTabs); i++) {
+        int tabFrom = tabPg * TAB_SLOTS;
+        int tabTo = Math.min(tabFrom + TAB_SLOTS, allTabIds.size());
+        for (int i = tabFrom; i < tabTo; i++) {
             String tid = allTabIds.get(i);
-            boolean active = tid.equals(activeTabId);
-            inv.setItem(i, tabItem(tid, active));
+            inv.setItem(i - tabFrom, tabItem(tid, tid.equals(activeTabId)));
+        }
+
+        if (tabPg > 0) {
+            inv.setItem(SLOT_TAB_PREV, pageNavItem(
+                Material.ARROW, lang().getRaw("admin.tab-prev"), tabPg - 1, true));
+        }
+        if (tabPg < maxTabPage) {
+            inv.setItem(SLOT_TAB_NEXT, pageNavItem(
+                Material.ARROW, lang().getRaw("admin.tab-next"), tabPg + 1, true));
         }
 
         if (TAB_TOKENS.equals(activeTabId)) {
             buildTokensTab(inv);
         } else if (TAB_UNIQUE.equals(activeTabId)) {
-            buildUniqueTab(inv);
+            buildUniqueTab(inv, skinPg);
         } else {
-            buildTierTab(inv, activeTabId);
+            buildTierTab(inv, activeTabId, skinPg);
         }
     }
 
-    private void buildTierTab(Inventory inv, String tierId) {
-        int slot = 9;
-        for (SkinDefinition skin : getSortedSkins(tierId)) {
-            if (slot >= GUI_SIZE) break;
-            inv.setItem(slot++, skinItem(skin));
-        }
+    private void buildTierTab(Inventory inv, String tierId, int page) {
+        renderSkinPage(inv, getSortedSkins(tierId), page);
     }
 
-    private void buildUniqueTab(Inventory inv) {
-        List<String> ids = plugin.getConfig().getStringList("unique-skins");
-        int slot = 9;
-        for (String id : ids) {
+    private void buildUniqueTab(Inventory inv, int page) {
+        List<SkinDefinition> skins = new ArrayList<>();
+        for (String id : plugin.getConfig().getStringList("unique-skins")) {
             SkinDefinition s = plugin.getSkinConfig().getSkin(id);
-            if (s != null && slot < GUI_SIZE) inv.setItem(slot++, skinItem(s));
+            if (s != null) skins.add(s);
         }
+        renderSkinPage(inv, skins, page);
+    }
+
+    private void renderSkinPage(Inventory inv, List<SkinDefinition> skins, int page) {
+        int maxPage = Math.max(0, (skins.size() - 1) / SKINS_PER_PAGE);
+        page = Math.max(0, Math.min(page, maxPage));
+        int from = page * SKINS_PER_PAGE;
+        int to = Math.min(from + SKINS_PER_PAGE, skins.size());
+
+        int slot = SKIN_SLOT_START;
+        for (int i = from; i < to; i++) {
+            inv.setItem(slot++, skinItem(skins.get(i)));
+        }
+
+        if (page > 0) {
+            inv.setItem(SLOT_SKIN_PREV, pageNavItem(
+                Material.SPECTRAL_ARROW, lang().getRaw("admin.skin-prev"), page - 1, false));
+        }
+        if (page < maxPage) {
+            inv.setItem(SLOT_SKIN_NEXT, pageNavItem(
+                Material.SPECTRAL_ARROW, lang().getRaw("admin.skin-next"), page + 1, false));
+        }
+    }
+
+    private ItemStack pageNavItem(Material mat, String name, int targetPage, boolean tabNav) {
+        ItemStack item = new ItemStack(mat);
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(colorize(name));
+        List<Component> lore = new ArrayList<>();
+        lore.add(colorize(lang().getRaw("admin.page-click")));
+        meta.lore(lore);
+        NamespacedKey key = new NamespacedKey(plugin, tabNav ? NBT_TAB_PAGE : NBT_SKIN_PAGE);
+        meta.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, targetPage);
+        item.setItemMeta(meta);
+        return item;
     }
 
     private void buildTokensTab(Inventory inv) {
@@ -278,9 +357,27 @@ public class AdminGUI implements Listener {
         NamespacedKey skinKey   = new NamespacedKey(plugin, NBT_SKIN_ID);
         NamespacedKey changeKey = new NamespacedKey(plugin, NBT_IS_CHANGE);
         NamespacedKey langKey   = new NamespacedKey(plugin, NBT_LANGUAGE);
+        NamespacedKey tabPageKey = new NamespacedKey(plugin, NBT_TAB_PAGE);
+        NamespacedKey skinPageKey = new NamespacedKey(plugin, NBT_SKIN_PAGE);
 
         if (pdc.has(langKey, PersistentDataType.BYTE)) {
             cycleLanguage(player);
+            return;
+        }
+
+        if (pdc.has(tabPageKey, PersistentDataType.INTEGER)) {
+            int newTabPg = pdc.get(tabPageKey, PersistentDataType.INTEGER);
+            player.playSound(player, Sound.UI_BUTTON_CLICK, 0.5f, 1f);
+            String tab = currentTab.getOrDefault(player.getUniqueId(), TAB_TOKENS);
+            Bukkit.getScheduler().runTask(plugin, () -> openTab(player, tab, newTabPg, skinPage.getOrDefault(player.getUniqueId(), 0)));
+            return;
+        }
+
+        if (pdc.has(skinPageKey, PersistentDataType.INTEGER)) {
+            int newSkinPg = pdc.get(skinPageKey, PersistentDataType.INTEGER);
+            player.playSound(player, Sound.UI_BUTTON_CLICK, 0.5f, 1f);
+            String tab = currentTab.getOrDefault(player.getUniqueId(), TAB_TOKENS);
+            Bukkit.getScheduler().runTask(plugin, () -> openTab(player, tab, tabPage.getOrDefault(player.getUniqueId(), 0), newSkinPg));
             return;
         }
 
@@ -289,7 +386,7 @@ public class AdminGUI implements Listener {
             String current = currentTab.getOrDefault(player.getUniqueId(), "");
             if (!newTabId.equals(current)) {
                 player.playSound(player, Sound.UI_BUTTON_CLICK, 0.5f, 1f);
-                Bukkit.getScheduler().runTask(plugin, () -> openTab(player, newTabId));
+                Bukkit.getScheduler().runTask(plugin, () -> openTab(player, newTabId, tabPageFor(player.getUniqueId(), newTabId), 0));
             }
             return;
         }
@@ -401,7 +498,7 @@ public class AdminGUI implements Listener {
 
         player.sendMessage(lang().component("admin.language-changed", "lang", next.toUpperCase()));
         player.playSound(player, Sound.UI_BUTTON_CLICK, 0.5f, 1f);
-        Bukkit.getScheduler().runTask(plugin, () -> openTab(player, currentTab.get(player.getUniqueId())));
+        Bukkit.getScheduler().runTask(plugin, () -> openTab(player, currentTab.get(player.getUniqueId()), tabPage.getOrDefault(player.getUniqueId(), 0), skinPage.getOrDefault(player.getUniqueId(), 0)));
     }
 
     private TierDef findTier(String id) {

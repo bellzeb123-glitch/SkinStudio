@@ -79,6 +79,11 @@ admin:
     - "&7Click to cycle between"
     - "&7available languages."
   language-changed: "&aLanguage changed to &f{lang}&a."
+  tab-prev: "&e◀ Previous categories"
+  tab-next: "&eNext categories ▶"
+  skin-prev: "&e◀ Previous page"
+  skin-next: "&eNext page ▶"
+  page-click: "&7Click to switch page"
 
 # ─── Commands ──────────────────────────────────────────────
 command:

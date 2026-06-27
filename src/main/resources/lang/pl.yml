@@ -79,6 +79,11 @@ admin:
     - "&7Kliknij aby przełączyć"
     - "&7między dostępnymi językami."
   language-changed: "&aZmieniono język na &f{lang}&a."
+  tab-prev: "&e◀ Poprzednie kategorie"
+  tab-next: "&eNastępne kategorie ▶"
+  skin-prev: "&e◀ Poprzednia strona"
+  skin-next: "&eNastępna strona ▶"
+  page-click: "&7Kliknij aby przełączyć stronę"
 
 # ─── Komendy ──────────────────────────────────────────────
 command:
