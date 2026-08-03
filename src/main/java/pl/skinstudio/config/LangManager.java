@@ -6,10 +6,12 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import pl.skinstudio.SkinStudio;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.logging.Level;
 
 public class LangManager {
 
@@ -34,27 +36,40 @@ public class LangManager {
     }
 
     public void reload() {
-        language = plugin.getConfig().getString("language", "en");
-        plugin.saveResource("lang/en.yml", false);
-        plugin.saveResource("lang/pl.yml", false);
+        try {
+            language = plugin.getConfig().getString("language", "en");
+            plugin.saveResource("lang/en.yml", false);
+            plugin.saveResource("lang/pl.yml", false);
 
-        String resourcePath = "lang/" + language + ".yml";
-        InputStream baseStream = plugin.getResource(resourcePath);
-        if (baseStream == null) baseStream = plugin.getResource("lang/en.yml");
+            String resourcePath = "lang/" + language + ".yml";
+            InputStream baseStream = plugin.getResource(resourcePath);
+            if (baseStream == null) baseStream = plugin.getResource("lang/en.yml");
 
-        YamlConfiguration base = YamlConfiguration.loadConfiguration(
-            new InputStreamReader(baseStream, StandardCharsets.UTF_8));
+            YamlConfiguration base = YamlConfiguration.loadConfiguration(
+                new InputStreamReader(baseStream, StandardCharsets.UTF_8));
 
-        File customFile = new File(plugin.getDataFolder(), resourcePath);
-        if (customFile.exists()) {
-            YamlConfiguration custom = YamlConfiguration.loadConfiguration(customFile);
-            for (String key : custom.getKeys(true)) {
-                if (!custom.isConfigurationSection(key)) {
-                    base.set(key, custom.get(key));
+            File customFile = new File(plugin.getDataFolder(), resourcePath);
+            if (customFile.exists()) {
+                YamlConfiguration custom = loadFromDisk(customFile);
+                for (String key : custom.getKeys(true)) {
+                    if (!custom.isConfigurationSection(key)) {
+                        base.set(key, custom.get(key));
+                    }
                 }
             }
+            this.lang = base;
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.SEVERE, "Failed to reload language — keeping previous", e);
+            if (lang == null) lang = new YamlConfiguration();
         }
-        this.lang = base;
+    }
+
+    private static YamlConfiguration loadFromDisk(File file) {
+        try (InputStreamReader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)) {
+            return YamlConfiguration.loadConfiguration(reader);
+        } catch (Exception e) {
+            return YamlConfiguration.loadConfiguration(file);
+        }
     }
 
     public String getRaw(String key, Object... replacements) {
@@ -79,6 +94,6 @@ public class LangManager {
     }
 
     private Component colorize(String text) {
-        return LegacyComponentSerializer.legacyAmpersand().deserialize(text);
+        return LegacyComponentSerializer.legacyAmpersand().deserialize(text == null ? "" : text);
     }
 }

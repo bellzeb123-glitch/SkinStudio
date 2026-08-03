@@ -398,10 +398,16 @@ public class SkinTokenCommand implements CommandExecutor, TabCompleter {
             }
 
             case "reload" -> {
-                plugin.reloadSkinCatalog();
-                plugin.getLang().reload();
-                sender.sendMessage(lang().component("command.reloaded",
-                    "count", plugin.getSkinConfig().getAllSkins().size()));
+                try {
+                    plugin.reloadSkinCatalog();
+                    plugin.getLang().reload();
+                    sender.sendMessage(lang().component("command.reloaded",
+                        "count", plugin.getSkinConfig().getAllSkins().size()));
+                } catch (Exception e) {
+                    plugin.getLogger().severe("Reload failed: " + e.getMessage());
+                    e.printStackTrace();
+                    sender.sendMessage("§cSkinStudio reload failed — see console.");
+                }
             }
 
             default -> sendHelp(sender);

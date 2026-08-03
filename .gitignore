@@ -1,7 +1,7 @@
-# Maven
+﻿# Maven
 target/
 
-# Build artifacts (CI też buduje JAR; lokalnie w target/)
+# Build artifacts (CI teĹĽ buduje JAR; lokalnie w target/)
 *.jar
 !.mvn/wrapper/maven-wrapper.jar
 
@@ -21,3 +21,6 @@ logs/
 # OS
 Thumbs.db
 Desktop.ini
+
+*.class
+.DS_Store
